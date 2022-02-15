@@ -12,9 +12,6 @@ async def main():
 
         keep_running = core.restart
 
-        if keep_running:
-            print("Restarting server")
-
 
 if __name__ == "__main__":
     asyncio.run(main())

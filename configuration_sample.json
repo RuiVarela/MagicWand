@@ -1,21 +1,26 @@
 {
-    "http_server": {
+    "HttpServer": {
         "port": 8080
     }, 
+
+    "Groups": ["Master Bedroom", "Baby Bedroom", "Bathroom", "Hall", "Living Room", "Kitchen"],
 
     "CommandHardware": {
         "devices": [
             {
                 "id": "1",
-                "name": "sample device 1",
-                "group": "Bedroom",
-                "script": "scripts/sample_device.sh"
+                "name": "Kitchen sample device 1",
+                "script": "sample_device.sh"
             },
             {
                 "id": "2",
-                "name": "sample device 2",
-                "group": "Kitchen",
-                "script": "scripts/sample_device.sh"
+                "name": "Hall sample device 2",
+                "script": "sample_device.sh"
+            }, 
+            {
+                "id": "3",
+                "name": "Hall sample device 3",
+                "script": "sample_device.sh"
             }
         ]
     },

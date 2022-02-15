@@ -1,9 +1,62 @@
+import asyncio
+import concurrent.futures
+import subprocess
+
 from hardware.base import Hardware
 
+
 class CommandHardware(Hardware):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, core):
+        super().__init__(core)
+        self.executer = None 
 
     async def open(self, configuration):
+        devices = []
+        for current in configuration["devices"]:
+            device = {
+                'id': self.device_type() + "_" + current["id"],
+                'name': current["name"],
+
+                'cfg': current
+            }
+            devices.append(device)
+        self.devices = devices
+
+        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+        
         await super().open(configuration)
 
+    async def close(self):
+        self.executor.shutdown()
+        self.executor = None
+
+        await super().close()
+
+    async def run_action(self, device_id, action):
+        await super().run_action(device_id, action)
+        
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(self.executor, self._execute_command, device_id, action)
+        self.core.log(f"{type(self).__name__} Resulted in {result}")
+
+        return True
+
+    def _execute_command(self, device_id, action):
+        script = self.get_device(device_id)["cfg"]["script"]
+
+        args = [f"scripts/{script}", device_id, action]
+
+        self.core.log("Running command [" + (' | '.join(map(str, args))) + "]")
+
+        try:
+            res = subprocess.Popen(args, stdout=subprocess.PIPE)
+        except OSError as e:
+            self.core.log("Error [" + str(e) + "]")
+            return -1
+
+        res.wait() # wait for process to finish; this also sets the returncode variable inside 'res'
+        output = res.stdout.read()
+
+        self.core.log("Done with output [" + output + "] return code [" + res.returncode + "]")
+
+        return res.returncode

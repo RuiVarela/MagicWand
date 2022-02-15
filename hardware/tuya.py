@@ -1,8 +1,8 @@
 from hardware.base import Hardware
 
 class TuyaHardware(Hardware):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, core):
+        super().__init__(core)
 
     async def open(self, configuration):
         await super().open(configuration)

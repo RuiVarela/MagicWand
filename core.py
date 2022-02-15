@@ -11,8 +11,10 @@ class Core:
         self.running = True
         self.version = "0.1.1"
 
+        self.groups = []
         self.hardware = []
         self.http_server = None
+        
 
     async def setup(self):
         configuration_path = pathlib.Path(__file__).parent / 'configuration.json'
@@ -20,18 +22,22 @@ class Core:
         self.configuration = json.loads(configuration_file.read())
         configuration_file.close()
 
+        self.groups = self.configuration["Groups"]
+
         #
         # Add hardware
         #
-        self.hardware.append(hardware.CommandHardware())
-        self.hardware.append(hardware.TuyaHardware())
-
+        self.hardware.append(hardware.CommandHardware(self))
+        self.hardware.append(hardware.TuyaHardware(self))
 
     async def teardown(self):
         pass
 
+    def log(self, message):
+        print("> " + message)
+
     async def pump(self):
-        print("Core starting pump...")
+        self.log("Core starting pump...")
 
         all_tasks = []
 
@@ -52,9 +58,25 @@ class Core:
             all_tasks.append(hardware_task)
 
         while self.running:
-            # print("Core running ok")
+            # self.log("Core running ok")
             await asyncio.sleep(1)
 
-        print("Core Shutting down")
+        self.log("Core Shutting down")
         await asyncio.gather(*all_tasks)
-        print("Core Shutting completed")
+        self.log("Core Shutting completed")
+
+    async def run_device_action(self, device_id, action):
+        for current in self.hardware:
+            if current.get_device(device_id):
+                return await current.run_action(device_id, action)
+                
+        return False
+
+    def get_groups(self):
+        return self.groups
+
+    def get_devices(self):
+        devices = []
+        for current in self.hardware:
+            devices.extend(current.get_devices())
+        return devices

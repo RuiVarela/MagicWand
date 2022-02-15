@@ -5,7 +5,6 @@ import datetime
 
 from aiohttp import web
 
-
 class HttpServer:
 
     def __init__(self):
@@ -22,7 +21,7 @@ class HttpServer:
 
         response_obj = {
             'version': self.core.version,
-            'update': str(datetime.timedelta(seconds=delta)), 
+            'uptime': str(datetime.timedelta(seconds=delta)), 
             'status': 'success'
         }
         return web.Response(text=self.to_json(response_obj))
@@ -42,21 +41,53 @@ class HttpServer:
     # Device Handlers
     #
     async def handle_device_list(self, request):
-        devices = await self.core.database.getDevices()
-        records_json = [record.to_dic() for record in devices]
+        devices = self.core.get_devices()
+        groups = self.core.get_groups()
+        records_json = []
+
+        for current in devices:
+            name = current["name"]
+            group = 'Home'
+
+            group_candidates = [current for current in groups if name.startswith(current)]
+            if len(group_candidates) > 0:
+                group = group_candidates[0]
+
+            element = {
+                'id': current["id"],
+                'name': name,
+                'group': group
+            }
+            records_json.append(element)
 
         response_obj = {
             'status': 'ok',
+            'groups': groups,
             'devices': records_json
         }
         return web.Response(text=self.to_json(response_obj))
 
-    async def handle_device_delete(self, request):
-        device_id = request.match_info['id']
-        await self.core.database.deleteDevice(device_id)
-
-        response_obj = {'status': 'ok'}
+    async def handle_device_action(self, request, device_id, action):
+        result = await self.core.run_device_action(device_id, action)
+        response_obj = {
+            'status': 'ok' if result else "error"
+        }
         return web.Response(text=self.to_json(response_obj))
+
+    async def handle_device_enable(self, request):
+        return await self.handle_device_action(request, request.match_info['id'], "enable")
+
+    async def handle_device_disable(self, request):
+        return await self.handle_device_action(request, request.match_info['id'], "disable")
+
+    async def handle_device_open(self, request):
+        return await self.handle_device_action(request, request.match_info['id'], "open") 
+
+    async def handle_device_close(self, request):
+        return await self.handle_device_action(request, request.match_info['id'], "close") 
+
+    async def handle_device_stop(self, request):
+        return await self.handle_device_action(request, request.match_info['id'], "stop")         
 
     def json_converter(o):
         if isinstance(o, datetime.datetime):
@@ -69,10 +100,10 @@ class HttpServer:
     # Pump
     #
     async def run(self, core):
-        port = core.configuration["http_server"]["port"]
+        port = core.configuration["HttpServer"]["port"]
         self.start_time = datetime.datetime.now()
 
-        print(f"HttpServer starting pump on {port}...")
+        core.log(f"HttpServer starting pump on {port}...")
         self.core = core
         self.application = web.Application()
 
@@ -81,7 +112,13 @@ class HttpServer:
         self.application.router.add_get("/api/maintenance/restart", self.handle_maintenance_restart)
 
         self.application.router.add_get("/api/device/list", self.handle_device_list)
-        self.application.router.add_get("/api/device/{id}/delete", self.handle_device_delete)
+
+        self.application.router.add_get("/api/device/{id}/enable", self.handle_device_enable)
+        self.application.router.add_get("/api/device/{id}/disable", self.handle_device_disable)
+
+        self.application.router.add_get("/api/device/{id}/open", self.handle_device_open)        
+        self.application.router.add_get("/api/device/{id}/close", self.handle_device_close)  
+        self.application.router.add_get("/api/device/{id}/stop", self.handle_device_stop) 
 
         root = pathlib.Path(__file__).parent
         self.application.router.add_static('/', path=root / 'static', name='static')
@@ -95,5 +132,5 @@ class HttpServer:
         while core.running:
             await asyncio.sleep(1)
 
-        print("HttpServer Shutting down")
+        core.log("HttpServer Shutting down")
         await runner.cleanup()
