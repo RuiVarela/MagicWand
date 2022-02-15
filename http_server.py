@@ -53,11 +53,10 @@ class HttpServer:
             if len(group_candidates) > 0:
                 group = group_candidates[0]
 
-            element = {
-                'id': current["id"],
-                'name': name,
-                'group': group
-            }
+            element = current.copy()
+            element.pop('cfg')
+            element['group'] = group
+            
             records_json.append(element)
 
         response_obj = {

@@ -14,8 +14,9 @@ class CommandHardware(Hardware):
         devices = []
         for current in configuration["devices"]:
             device = {
-                'id': self.device_type() + "_" + current["id"],
+                'id': self.hardware_type() + "_" + current["id"],
                 'name': current["name"],
+                'type': current["type"],
 
                 'cfg': current
             }

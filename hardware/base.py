@@ -14,7 +14,7 @@ class Hardware:
     def get_devices(self):
         return self.devices
 
-    def device_type(self):
+    def hardware_type(self):
         return type(self).__name__   
 
     async def open(self, configuration):
