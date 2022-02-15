@@ -1,0 +1,27 @@
+{
+    "http_server": {
+        "port": 8080
+    }, 
+
+    "CommandHardware": {
+        "devices": [
+            {
+                "id": "1",
+                "name": "sample device 1",
+                "group": "Bedroom",
+                "script": "scripts/sample_device.sh"
+            },
+            {
+                "id": "2",
+                "name": "sample device 2",
+                "group": "Kitchen",
+                "script": "scripts/sample_device.sh"
+            }
+        ]
+    },
+
+    "TuyaHardware": {
+        "username": "rui",
+        "password": "varela"
+    }
+}
