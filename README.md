@@ -12,9 +12,12 @@ cp configuration_sample.json configuration.json
 ## Development Setup
 Create and select a venv
 ```
-python -m venv project_venv
-
-project_venv\Scripts\activate.bat
+python -m venv .venv
+.venv\Scripts\activate.bat
+```
+Install requirements
+```
+pip install -r requirements.txt
 ```
 
 Freeze requirements

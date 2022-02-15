@@ -37,14 +37,13 @@ class CommandHardware(Hardware):
         
         loop = asyncio.get_event_loop()
         result = await loop.run_in_executor(self.executor, self._execute_command, device_id, action)
-        self.core.log(f"{type(self).__name__} Resulted in {result}")
-
-        return True
+        return (result == 0)
 
     def _execute_command(self, device_id, action):
+        cfg_id = self.get_device(device_id)["cfg"]["id"]
         script = self.get_device(device_id)["cfg"]["script"]
 
-        args = [f"scripts/{script}", device_id, action]
+        args = [f"scripts/{script}", cfg_id, action]
 
         self.core.log("Running command [" + (' | '.join(map(str, args))) + "]")
 
@@ -55,8 +54,8 @@ class CommandHardware(Hardware):
             return -1
 
         res.wait() # wait for process to finish; this also sets the returncode variable inside 'res'
-        output = res.stdout.read()
+        output = res.stdout.read().decode("utf-8")
 
-        self.core.log("Done with output [" + output + "] return code [" + res.returncode + "]")
+        self.core.log("Done with output [" + output + "] return code [" + str(res.returncode) + "]")
 
         return res.returncode
