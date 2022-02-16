@@ -1,23 +1,32 @@
 <!DOCTYPE html>
-
-<html>
+<html lang="en" class="no-js">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-  <title>Spoon-Knife</title>
-  <LINK href="styles.css" rel="stylesheet" type="text/css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Magic Wand</title>
+
+  <script type="module">
+    document.documentElement.classList.remove('no-js');
+    document.documentElement.classList.add('js');
+  </script>
+
+  <link rel="stylesheet" href="/app.css">
+  <meta name="description" content="Magic home controller">
+  <link rel="icon" href="/favicon.ico">
+  <meta name="theme-color" content="#FF00FF">
 </head>
 
 <body>
+  <div id="groups-container" class="dropdown">
+    <button id="groups-button" class="dropbtn">Dropdown</button>
+    <div id="groups-list" class="dropdown-content"></div>
+  </div>
 
-<img src="forkit.gif" id="octocat" alt="" />
+  <div id="devices-container">
+    <div id="devices-list"></div>
+  </div>
 
-<!-- Feel free to change this text here -->
-<p>
-  Fork me? Fork you, @octocat!
-</p>
-<p>
-  Sean made a change
-</p>
-
+  <script src="/app.js" type="module"></script>
 </body>
 </html>

@@ -7,21 +7,23 @@
 
     "CommandHardware": {
         "devices": [
-            {
-                "id": "1",
-                "name": "Kitchen sample device 1",
-                "script": "sample_device.sh"
-            },
-            {
-                "id": "2",
-                "name": "Hall sample device 2",
-                "script": "sample_device.sh"
-            }, 
-            {
-                "id": "3",
-                "name": "Hall sample device 3",
-                "script": "sample_device.sh"
-            }
+            { "id": "1",    "name": "Kitchen sample device 1",  "type": "switch",   "script": "sample_device.sh" },
+            { "id": "2",    "name": "Kitchen sample device 2",  "type": "switch",   "script": "sample_device.sh" }, 
+            { "id": "3",    "name": "Kitchen sample device 3",  "type": "switch",   "script": "sample_device.sh" },
+            { "id": "4",    "name": "Kitchen sample device 4",  "type": "switch",   "script": "sample_device.sh" },
+            { "id": "5",    "name": "Hall sample device 1",     "type": "switch",   "script": "sample_device.sh" },
+            { "id": "6",    "name": "Hall sample device 2",     "type": "switch",   "script": "sample_device.sh" },
+            { "id": "7",    "name": "Hall sample device 3",     "type": "switch",   "script": "sample_device.sh" },
+            { "id": "8",    "name": "Hall sample device 4",     "type": "switch",   "script": "sample_device.sh" },
+            { "id": "9",    "name": "Hall sample device 5",     "type": "switch",   "script": "sample_device.sh" },
+            { "id": "10",   "name": "Hall sample device 6",     "type": "light",    "script": "sample_device.sh" },
+            { "id": "11",   "name": "Hall sample device 7",     "type": "light",    "script": "sample_device.sh" },
+            { "id": "12",   "name": "Hall sample device 8",     "type": "light",    "script": "sample_device.sh" },
+            { "id": "13",   "name": "Hall sample device 9",     "type": "light",    "script": "sample_device.sh" },
+            { "id": "14",   "name": "Hall sample device 10",    "type": "light",    "script": "sample_device.sh" },
+            { "id": "15",   "name": "Hall sample device 11",    "type": "light",    "script": "sample_device.sh" },
+            { "id": "16",   "name": "Hall sample device 12",    "type": "light",    "script": "sample_device.sh" },
+            { "id": "17",   "name": "Hall sample device 13",    "type": "light",    "script": "sample_device.sh" }
         ]
     },
 

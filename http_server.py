@@ -86,7 +86,10 @@ class HttpServer:
         return await self.handle_device_action(request, request.match_info['id'], "close") 
 
     async def handle_device_stop(self, request):
-        return await self.handle_device_action(request, request.match_info['id'], "stop")         
+        return await self.handle_device_action(request, request.match_info['id'], "stop")  
+
+    async def root_handler(self, request):
+        return web.HTTPFound('/index.html')
 
     def json_converter(o):
         if isinstance(o, datetime.datetime):
@@ -120,6 +123,7 @@ class HttpServer:
         self.application.router.add_get("/api/device/{id}/stop", self.handle_device_stop) 
 
         root = pathlib.Path(__file__).parent
+        self.application.router.add_route('*', '/', self.root_handler)
         self.application.router.add_static('/', path=root / 'static', name='static')
 
         runner = web.AppRunner(self.application)
