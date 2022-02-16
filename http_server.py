@@ -128,7 +128,7 @@ class HttpServer:
 
         runner = web.AppRunner(self.application)
         await runner.setup()
-        site = web.TCPSite(runner, 'localhost', port)
+        site = web.TCPSite(runner, None, port)
         await site.start()
 
         # pump
