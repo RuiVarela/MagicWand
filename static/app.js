@@ -17,7 +17,9 @@ function makeId(base, name) {
     return base + "_" + name.replace(' ', '_').toLowerCase();
 }
 
-
+//
+// App Logic
+//
 function updateDeviceUi(div, device) {
     div.textContent = device.name;
 }
@@ -29,7 +31,7 @@ function selectGroup(group) {
 }
 
 function handleListResponse(data) {
-    console.log(data);
+    //console.log(data);
 
     if (data.status != 'ok') {
         console.log("Call failure: ");
@@ -83,7 +85,9 @@ function updateData() {
         .then(data => handleListResponse(data));
 }
 
-
+//
+// Bootstrap
+//
 console.log("Initializing");
 elById("groups-button").addEventListener("click", () => { toggleVisibility("groups-list"); });
 updateData();
