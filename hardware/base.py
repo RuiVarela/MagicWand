@@ -11,6 +11,12 @@ class Hardware:
             return found[0]
         return None
 
+    def complete_action(self, device_id, action):
+        if action == "enable" or action == "open":
+            self.get_device(device_id)['state'] = 'on'
+        elif action == "disable" or action == "close":
+            self.get_device(device_id)['state'] = 'off'
+
     def get_devices(self):
         return self.devices
 

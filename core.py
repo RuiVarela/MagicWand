@@ -68,7 +68,10 @@ class Core:
     async def run_device_action(self, device_id, action):
         for current in self.hardware:
             if current.get_device(device_id):
-                return await current.run_action(device_id, action)
+                result = await current.run_action(device_id, action)
+                if result:
+                    current.complete_action(device_id, action)
+                return result
                 
         return False
 

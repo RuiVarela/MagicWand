@@ -20,8 +20,28 @@ function makeId(base, name) {
 //
 // App Logic
 //
+function deviceClicked(device) {
+    console.log("Device Clicked" + device);
+
+    let div = elById(device);
+    let action = "enable"
+    if (div.classList.contains("device_state_on")) 
+        action = "disable";
+    
+    fetch('/api/device/' + device + '/' + action)
+        .then(response => updateData())
+}
+
 function updateDeviceUi(div, device) {
-    div.textContent = device.name;
+    let html = "";
+    html += '<div class="device_color_overlay_' + device.state + '"></div>';
+    html += '<div class="device_label">' + device.name + "</div>"
+    div.innerHTML = html;
+
+    div.classList.remove("device_state_on");
+    div.classList.remove("device_state_off");
+
+    div.classList.add("device_state_" + device.state);
 }
 
 function selectGroup(group) {
@@ -66,6 +86,7 @@ function handleListResponse(data) {
             devices_list.appendChild(div);
 
             div = elById(device.id);
+            div.addEventListener("click", () => { deviceClicked(device.id); });
         }
         updateDeviceUi(div, device);
     });

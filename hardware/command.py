@@ -17,6 +17,7 @@ class CommandHardware(Hardware):
                 'id': self.hardware_type() + "_" + current["id"],
                 'name': current["name"],
                 'type': current["type"],
+                'state': 'off',
 
                 'cfg': current
             }
