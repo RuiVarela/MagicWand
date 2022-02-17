@@ -4,14 +4,6 @@
 function elById(id) {
     return document.getElementById(id);
 }
-function toggleVisibility(id) {
-    let element = elById("groups-list");
-    if (element.style.display == 'none') {
-        element.style.display = 'block';
-    } else {
-        element.style.display = 'none';
-    }
-}
 
 function makeId(base, name) {
     return base + "_" + name.replace(' ', '_').toLowerCase();
@@ -21,7 +13,7 @@ function makeId(base, name) {
 // App Logic
 //
 function deviceClicked(device) {
-    console.log("Device Clicked" + device);
+    console.log("Device Clicked: " + device);
 
     let div = elById(device);
     let action = "enable"
@@ -33,21 +25,42 @@ function deviceClicked(device) {
 }
 
 function updateDeviceUi(div, device) {
+    div.device = device;
+
+    let statePrefix = 'device_state_';
+    let nextState = statePrefix + device.state;
+    if (div.classList.contains(nextState))
+        return;
+    
     let html = "";
     html += '<div class="device_color_overlay_' + device.state + '"></div>';
     html += '<div class="device_label">' + device.name + "</div>"
     div.innerHTML = html;
 
-    div.classList.remove("device_state_on");
-    div.classList.remove("device_state_off");
+    let remove = [];
+    div.classList.forEach(value => {
+        if (value.startsWith(statePrefix))
+            remove.push(value);
+    });
 
+    remove.forEach(value => {
+        div.classList.remove(value);
+    });
+    
     div.classList.add("device_state_" + device.state);
 }
 
 function selectGroup(group) {
-    elById("groups-button").textContent = group;
-    elById("groups-list").style.display = 'none';
     console.log("Selecting Group " + group);
+    elById("groups-button").textContent = group;
+    var divs = elById("devices-list");
+    divs.childNodes.forEach(div => {
+        if (div.device.group == group || group == 'Home') {
+            div.style.display = 'block';
+        } else {
+            div.style.display = 'none';
+        }
+    });
 }
 
 function handleListResponse(data) {
@@ -81,7 +94,6 @@ function handleListResponse(data) {
         if (div == null) {
             div = document.createElement("div");
             div.setAttribute("id", device.id);
-
             var devices_list = elById("devices-list");
             devices_list.appendChild(div);
 
@@ -110,6 +122,25 @@ function updateData() {
 // Bootstrap
 //
 console.log("Initializing");
-elById("groups-button").addEventListener("click", () => { toggleVisibility("groups-list"); });
+
+// Close the dropdown menu if the user clicks outside of it
+window.onclick = function (event) {
+    if (!event.target.matches('.dropbtn') && !event.target.matches('.dropdown')) {
+        let dropdowns = document.getElementsByClassName("dropdown-content");
+        for (let i = 0; i < dropdowns.length; i++) {
+            var openDropdown = dropdowns[i];
+            if (openDropdown.classList.contains('show')) 
+                openDropdown.classList.remove('show');
+        }
+    }
+}
+
+elById("groups-button").addEventListener("click", () => { 
+    elById("groups-list").classList.toggle("show");
+});
+
+elById("settings-button").addEventListener("click", () => { 
+    elById("settings-list").classList.toggle("show");
+});
 updateData();
 

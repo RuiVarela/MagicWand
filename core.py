@@ -14,6 +14,8 @@ class Core:
         self.groups = []
         self.hardware = []
         self.http_server = None
+        self.log_history_size = 100
+        self.log_history = []
         
 
     async def setup(self):
@@ -34,6 +36,9 @@ class Core:
         pass
 
     def log(self, message):
+        self.log_history.extend(message.splitlines())
+        self.log_history = self.log_history[-self.log_history_size:]
+
         print("> " + message)
 
     async def pump(self):

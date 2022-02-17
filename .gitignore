@@ -129,3 +129,4 @@ dmypy.json
 .pyre/
 project_venv
 configuration.json
+.DS_Store

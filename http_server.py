@@ -26,6 +26,10 @@ class HttpServer:
         }
         return web.Response(text=self.to_json(response_obj))
 
+    async def handle_maintenance_log(self, request):
+        data = "\n".join(self.core.log_history)
+        return web.Response(text=data)
+
     async def handle_maintenance_restart(self, request):
         self.core.restart = True
         self.core.running = False
@@ -110,6 +114,7 @@ class HttpServer:
         self.application = web.Application()
 
         self.application.router.add_get("/api/maintenance/status", self.handle_maintenance_status)
+        self.application.router.add_get("/api/maintenance/log", self.handle_maintenance_log)
         self.application.router.add_get("/api/maintenance/shutdown", self.handle_maintenance_shutdown)
         self.application.router.add_get("/api/maintenance/restart", self.handle_maintenance_restart)
 

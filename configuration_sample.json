@@ -3,7 +3,7 @@
         "port": 8080
     }, 
 
-    "Groups": ["Master Bedroom", "Baby Bedroom", "Bathroom", "Hall", "Living Room", "Kitchen"],
+    "Groups": ["Home", "Master Bedroom", "Baby Bedroom", "Bathroom", "Hall", "Living Room", "Kitchen"],
 
     "CommandHardware": {
         "devices": [
