@@ -41,5 +41,27 @@ class Hardware:
         #self.core.log(f"{type(self).__name__} run_action device_id={device_id} action={action}")
         return False
 
+        
+class DummyHardware(Hardware):
+    def __init__(self, core):
+        super().__init__(core)
 
-      
+    async def open(self, configuration):
+        devices = []
+        for current in configuration["devices"]:
+            device = {
+                'id': self.hardware_type() + "_" + current["id"],
+                'name': current["name"],
+                'type': current["type"],
+                'state': 'off',
+
+                'cfg': current
+            }
+            devices.append(device)
+        self.devices = devices
+
+        await super().open(configuration)
+        
+    async def run_action(self, device_id, action):
+        await super().run_action(device_id, action)
+        return True

@@ -29,6 +29,7 @@ class Core:
         #
         # Add hardware
         #
+        self.hardware.append(hardware.DummyHardware(self))
         self.hardware.append(hardware.CommandHardware(self))
         self.hardware.append(hardware.TuyaHardware(self))
 

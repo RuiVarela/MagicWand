@@ -38,8 +38,7 @@ class CommandHardware(Hardware):
         await super().run_action(device_id, action)
         
         loop = asyncio.get_event_loop()
-        result = 0
-        #result = await loop.run_in_executor(self.executor, self._execute_command, device_id, action)
+        result = await loop.run_in_executor(self.executor, self._execute_command, device_id, action)
         return (result == 0)
 
     def _execute_command(self, device_id, action):
