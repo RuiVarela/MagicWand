@@ -26,8 +26,18 @@ pip3 freeze > requirements.txt
 ```
 
 ## Api calls
-- http://localhost:8080/api/maintenance/status
-- http://localhost:8080/api/maintenance/shutdown
-- http://localhost:8080/api/maintenance/restart
-- http://localhost:8080/api/device/list
-- http://localhost:8080/api/device/CommandHardware_1/open
+```
+http://localhost:8080/api/maintenance/status
+http://localhost:8080/api/maintenance/shutdown
+http://localhost:8080/api/maintenance/restart
+http://localhost:8080/api/maintenance/logs
+
+http://localhost:8080/api/device/list
+
+http://localhost:8080/api/device/CommandHardware_1/enable
+http://localhost:8080/api/device/CommandHardware_1/disable
+
+http://localhost:8080/api/device/CommandHardware_1/open
+http://localhost:8080/api/device/CommandHardware_1/close
+http://localhost:8080/api/device/CommandHardware_1/stop
+```

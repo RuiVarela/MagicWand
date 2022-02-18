@@ -21,20 +21,20 @@
 
   <div id="groups-container" class="dropdown">
     <button id="groups-button" class="dropbtn">Home</button>
-    <div id="groups-list" class="dropdown-content"></div>
+    <div id="groups-list" class="dropdown-content no-selection"></div>
   </div>
 
   <div id="devices-container">
-    <div id="devices-list"></div>
+    <div id="devices-list" class="no-selection"></div>
   </div>
 
   <div id="settings-container" class="dropdown">
     <button id="settings-button" class="dropbtn"></button>
-    <div id="settings-list" class="dropdown-content">
-      <a>Logs</a>
-      <a>Status</a>
-      <a>Shutdown</a>
-      <a>Restart</a>
+    <div id="settings-list" class="dropdown-content no-selection">
+      <a href="/api/maintenance/log">Logs</a>
+      <a href="/api/maintenance/status">Status</a>
+      <a href="/api/maintenance/shutdown">Shutdown</a>
+      <a href="/api/maintenance/restart">Restart</a>
     </div>
   </div>
   

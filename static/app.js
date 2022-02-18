@@ -12,17 +12,21 @@ function makeId(base, name) {
 //
 // App Logic
 //
-function deviceClicked(device) {
-    console.log("Device Clicked: " + device);
-
+function deviceClicked(device, action) {
     let div = elById(device);
-    let action = "enable"
-    if (div.classList.contains("device_state_on")) 
-        action = "disable";
-    
+
+    if (action == null) {
+        action = "enable"
+        if (div.classList.contains("device_state_on"))
+            action = "disable";
+    }
+
+    console.log("Device Clicked: " + device + " > " + action);
+
     fetch('/api/device/' + device + '/' + action)
         .then(response => updateData())
 }
+
 
 function updateDeviceUi(div, device) {
     div.device = device;
@@ -31,9 +35,18 @@ function updateDeviceUi(div, device) {
     let nextState = statePrefix + device.state;
     if (div.classList.contains(nextState))
         return;
-    
+
     let html = "";
-    html += '<div class="device_color_overlay_' + device.state + '"></div>';
+    if (device.type == 'curtain') {
+        html += '<div class="device_curtain_overlay">';
+        html += '   <div class="curtain_open"></div>';
+        html += '   <div class="curtain_stop"></div>';
+        html += '   <div class="curtain_close"></div>';
+        html += '</div>';
+    } else {
+        html += '<div class="device_color_overlay_' + device.state + '"></div>';
+    }
+
     html += '<div class="device_label">' + device.name + "</div>"
     div.innerHTML = html;
 
@@ -48,6 +61,25 @@ function updateDeviceUi(div, device) {
     });
     
     div.classList.add("device_state_" + device.state);
+
+
+    if (device.type == 'curtain') {
+        div.querySelector(`[class=curtain_open]`)
+            .addEventListener("click", () => { deviceClicked(device.id, "open"); });
+
+        div.querySelector(`[class=curtain_stop]`)
+            .addEventListener("click", () => { deviceClicked(device.id, "stop"); });
+
+        div.querySelector(`[class=curtain_close]`)
+            .addEventListener("click", () => { deviceClicked(device.id, "close"); });
+
+    } else {
+        if (div.store_click_handler)
+            div.removeEventListener("click", div.store_click_handler);
+
+        div.store_click_handler = () => { deviceClicked(device.id, null); };
+        div.addEventListener("click", div.store_click_handler);
+    }
 }
 
 function selectGroup(group) {
@@ -85,6 +117,7 @@ function handleListResponse(data) {
 
             element.textContent = group
             element.addEventListener("click", () => { selectGroup(group); });
+            
             groups_added += 1;
         }
     });
@@ -98,7 +131,6 @@ function handleListResponse(data) {
             devices_list.appendChild(div);
 
             div = elById(device.id);
-            div.addEventListener("click", () => { deviceClicked(device.id); });
         }
         updateDeviceUi(div, device);
     });

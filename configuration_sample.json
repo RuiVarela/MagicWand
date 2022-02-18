@@ -16,6 +16,7 @@
             { "id": "7",    "name": "Hall sample device 3",     "type": "switch",   "script": "sample_device.sh" },
             { "id": "8",    "name": "Hall sample device 4",     "type": "switch",   "script": "sample_device.sh" },
             { "id": "9",    "name": "Hall sample device 5",     "type": "switch",   "script": "sample_device.sh" },
+            
             { "id": "10",   "name": "Hall sample device 6",     "type": "light",    "script": "sample_device.sh" },
             { "id": "11",   "name": "Hall sample device 7",     "type": "light",    "script": "sample_device.sh" },
             { "id": "12",   "name": "Hall sample device 8",     "type": "light",    "script": "sample_device.sh" },
@@ -23,7 +24,16 @@
             { "id": "14",   "name": "Hall sample device 10",    "type": "light",    "script": "sample_device.sh" },
             { "id": "15",   "name": "Hall sample device 11",    "type": "light",    "script": "sample_device.sh" },
             { "id": "16",   "name": "Hall sample device 12",    "type": "light",    "script": "sample_device.sh" },
-            { "id": "17",   "name": "Hall sample device 13",    "type": "light",    "script": "sample_device.sh" }
+            { "id": "17",   "name": "Hall sample device 13",    "type": "light",    "script": "sample_device.sh" },
+
+            { "id": "18",   "name": "Living Room  device 1",    "type": "curtain",  "script": "sample_device.sh" },
+            { "id": "19",   "name": "Living Room  device 2",    "type": "curtain",  "script": "sample_device.sh" },
+            { "id": "20",   "name": "Living Room  device 3",    "type": "curtain",  "script": "sample_device.sh" },
+            { "id": "21",   "name": "Living Room  device 4",    "type": "curtain",  "script": "sample_device.sh" },
+            { "id": "22",   "name": "Living Room  device 5",    "type": "curtain",  "script": "sample_device.sh" },
+            { "id": "23",   "name": "Living Room  device 6",    "type": "curtain",  "script": "sample_device.sh" },
+            { "id": "24",   "name": "Living Room  device 7",    "type": "curtain",  "script": "sample_device.sh" },
+            { "id": "25",   "name": "Living Room  device 8",    "type": "curtain",  "script": "sample_device.sh" },
         ]
     },
 
