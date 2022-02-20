@@ -44,7 +44,13 @@
     },
 
     "TuyaHardware": {
-        "username": "rui",
-        "password": "varela"
+        "endpoint": "https://openapi.tuyaeu.com",
+        "access_id": "access_id", 
+        "access_key": "access_key", 
+
+        "username": "username",
+        "password": "password",
+        "country_code": "pt",
+        "schema": "SmartLife"
     }
 }

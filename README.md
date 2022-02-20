@@ -5,7 +5,9 @@ Control your house with simplicity
 # Runtime Setup
 Create a configuration file
 ```
-cp configuration_sample.json configuration.json
+cp ./support/configuration_sample.json ./configuration.json
+
+sudo cp ./support/magic_wand.sh /etc/init.d/magic_wand.sh
 ```
 
 
