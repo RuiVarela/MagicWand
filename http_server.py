@@ -58,7 +58,9 @@ class HttpServer:
                 group = group_candidates[0]
 
             element = current.copy()
-            element.pop('cfg')
+            if 'cfg' in element:
+                element.pop('cfg')
+                
             element['group'] = group
             
             records_json.append(element)

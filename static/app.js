@@ -31,6 +31,11 @@ function deviceClicked(device, action) {
 function updateDeviceUi(div, device) {
     div.device = device;
 
+    let group = device.group;
+    let name = device.name;
+    if (name.startsWith(group + " "))
+        name = name.substring(group.length + 1);
+    
     let statePrefix = 'device_state_';
     let nextState = statePrefix + device.state;
     if (div.classList.contains(nextState))
@@ -47,7 +52,10 @@ function updateDeviceUi(div, device) {
         html += '<div class="device_color_overlay_' + device.state + '"></div>';
     }
 
-    html += '<div class="device_label">' + device.name + "</div>"
+    html += '<div class="device_label">'
+    if (group != 'Home')
+        html += '<span class="device_group">' + group+ ' </span>'
+    html += name + "</div>"
     div.innerHTML = html;
 
     let remove = [];
