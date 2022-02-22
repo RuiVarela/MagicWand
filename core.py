@@ -12,26 +12,35 @@ class Core:
         self.version = "0.1.1"
 
         self.groups = []
+        self.name_mapper = {}
         self.hardware = []
         self.http_server = None
         self.log_history_size = 100 * 1024
         self.log_history = []
         
-
     async def setup(self):
         configuration_path = pathlib.Path(__file__).parent / 'configuration.json'
         configuration_file = open(configuration_path, "r")
         self.configuration = json.loads(configuration_file.read())
         configuration_file.close()
 
-        self.groups = self.configuration["Groups"]
+        if "Groups" in self.configuration:
+            self.groups = self.configuration["Groups"]
+
+        if "Names" in self.configuration:
+            names = self.configuration["Names"]
 
         #
         # Add hardware
         #
-        self.hardware.append(hardware.DummyHardware(self))
-        self.hardware.append(hardware.CommandHardware(self))
-        self.hardware.append(hardware.TuyaHardware(self))
+        if "DummyHardware" in self.configuration:
+            self.hardware.append(hardware.DummyHardware(self))
+
+        if "CommandHardware" in self.configuration:        
+            self.hardware.append(hardware.CommandHardware(self))
+        
+        if "TuyaHardware" in self.configuration:
+            self.hardware.append(hardware.TuyaHardware(self))
 
     async def teardown(self):
         pass
@@ -89,3 +98,25 @@ class Core:
         for current in self.hardware:
             devices.extend(current.get_devices())
         return devices
+
+    async def get_device_list(self):
+        devices = self.get_devices()
+        groups = self.get_groups()
+        records = []
+
+        for current in devices:
+            name = current["name"]
+            group = 'Home'
+
+            group_candidates = [current for current in groups if name.startswith(current)]
+            if len(group_candidates) > 0:
+                group = group_candidates[0]
+
+            element = current.copy()
+            if 'cfg' in element:
+                element.pop('cfg')
+                
+            element['group'] = group
+            
+            records.append(element)
+        return (groups, records)

@@ -45,30 +45,11 @@ class HttpServer:
     # Device Handlers
     #
     async def handle_device_list(self, request):
-        devices = self.core.get_devices()
-        groups = self.core.get_groups()
-        records_json = []
-
-        for current in devices:
-            name = current["name"]
-            group = 'Home'
-
-            group_candidates = [current for current in groups if name.startswith(current)]
-            if len(group_candidates) > 0:
-                group = group_candidates[0]
-
-            element = current.copy()
-            if 'cfg' in element:
-                element.pop('cfg')
-                
-            element['group'] = group
-            
-            records_json.append(element)
-
+        groups, records = await self.core.get_device_list()
         response_obj = {
             'status': 'ok',
             'groups': groups,
-            'devices': records_json
+            'devices': records
         }
         return web.Response(text=self.to_json(response_obj))
 

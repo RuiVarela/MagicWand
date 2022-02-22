@@ -1,13 +1,11 @@
 //
 // Helpers
 //
-function elById(id) {
-    return document.getElementById(id);
-}
+function elById(id) { return document.getElementById(id); }
+function elByCls(cls) { return document.getElementsByClassName(cls); }
+function makeId(base, name) { return base + "_" + name.replace(' ', '_').toLowerCase(); }
 
-function makeId(base, name) {
-    return base + "_" + name.replace(' ', '_').toLowerCase();
-}
+function homeGroup() { return "Home"; }
 
 //
 // App Logic
@@ -53,8 +51,11 @@ function updateDeviceUi(div, device) {
     }
 
     html += '<div class="device_label">'
-    if (group != 'Home')
-        html += '<span class="device_group">' + group+ ' </span>'
+    if (group != homeGroup()) {
+        let selected_group = elById("groups-button").textContent;
+        let toggler = (selected_group == homeGroup()) ? "showInline" : "hide";
+        html += '<span class="device_group ' + toggler + '">' + group + ' </span>'
+    }
     html += name + "</div>"
     div.innerHTML = html;
 
@@ -93,14 +94,26 @@ function updateDeviceUi(div, device) {
 function selectGroup(group) {
     console.log("Selecting Group " + group);
     elById("groups-button").textContent = group;
-    var divs = elById("devices-list");
-    divs.childNodes.forEach(div => {
-        if (div.device.group == group || group == 'Home') {
+    var elements = elById("devices-list");
+    elements.childNodes.forEach(div => {
+        if (div.device.group == group || group == homeGroup()) {
             div.style.display = 'block';
         } else {
             div.style.display = 'none';
         }
     });
+
+    let addElement = (group == homeGroup()) ? "showInline" : "hide";
+    let removeElement = (group == homeGroup()) ? "hide" : "showInline";
+    elements = elByCls("device_group");
+    for (let i = 0; i != elements.length; ++i) {
+        let span = elements[i];
+        if (span.classList.contains(removeElement))
+            span.classList.remove(removeElement);
+
+        if (!span.classList.contains(removeElement))
+            span.classList.add(addElement);
+    }
 }
 
 function handleListResponse(data) {
@@ -166,21 +179,32 @@ console.log("Initializing");
 // Close the dropdown menu if the user clicks outside of it
 window.onclick = function (event) {
     if (!event.target.matches('.dropbtn') && !event.target.matches('.dropdown')) {
-        let dropdowns = document.getElementsByClassName("dropdown-content");
+        let dropdowns = elByCls("dropdown-content");
         for (let i = 0; i < dropdowns.length; i++) {
             var openDropdown = dropdowns[i];
-            if (openDropdown.classList.contains('show')) 
+
+            if (openDropdown.classList.contains('show')) {
                 openDropdown.classList.remove('show');
+                openDropdown.classList.add('hide');
+            }
+
         }
     }
 }
 
+elById("groups-list").classList.add("hide");
+elById("settings-list").classList.add("hide");
+
 elById("groups-button").addEventListener("click", () => { 
+    elById("groups-list").classList.toggle("hide");
     elById("groups-list").classList.toggle("show");
 });
 
 elById("settings-button").addEventListener("click", () => { 
+    elById("settings-list").classList.toggle("hide");
     elById("settings-list").classList.toggle("show");
 });
+
+
 updateData();
 
