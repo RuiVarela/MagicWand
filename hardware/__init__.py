@@ -10,10 +10,10 @@ async def run(core, current_hardware):
     configuration = core.configuration[current_hardware.hardware_type()]
     interval = 5
     
-    await current_hardware.open(configuration)
+    await current_hardware.start(configuration)
 
     while core.running:
         await asyncio.sleep(interval)
         await current_hardware.step()
 
-    await current_hardware.close()
+    await current_hardware.stop()

@@ -10,7 +10,7 @@ class CommandHardware(Hardware):
         super().__init__(core)
         self.executer = None 
 
-    async def open(self, configuration):
+    async def start(self, configuration):
         devices = []
         for current in configuration["devices"]:
             device = {
@@ -26,17 +26,15 @@ class CommandHardware(Hardware):
 
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
         
-        await super().open(configuration)
+        await super().start(configuration)
 
-    async def close(self):
+    async def stop(self):
         self.executor.shutdown()
         self.executor = None
 
-        await super().close()
+        await super().stop()
 
     async def run_action(self, device_id, action):
-        await super().run_action(device_id, action)
-        
         loop = asyncio.get_event_loop()
         result = await loop.run_in_executor(self.executor, self._execute_command, device_id, action)
         return (result == 0)

@@ -29,6 +29,9 @@ class Core:
 
         if "Names" in self.configuration:
             names = self.configuration["Names"]
+            for record in names:
+                if "device_name" in record:
+                    self.name_mapper[record['device_name']] = record['renamed']
 
         #
         # Add hardware
@@ -104,9 +107,11 @@ class Core:
         groups = self.get_groups()
         records = []
 
-        for current in devices:
-            name = current["name"]
+        for current in devices:       
             group = 'Home'
+            name = current["name"]
+            if name in self.name_mapper:
+                name = self.name_mapper[name]
 
             group_candidates = [current for current in groups if name.startswith(current)]
             if len(group_candidates) > 0:
@@ -115,7 +120,8 @@ class Core:
             element = current.copy()
             if 'cfg' in element:
                 element.pop('cfg')
-                
+
+            element['name'] = name    
             element['group'] = group
             
             records.append(element)

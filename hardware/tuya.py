@@ -23,6 +23,7 @@ class LogHandler(logging.StreamHandler):
 class TuyaHardware(Hardware):
     def __init__(self, core):
         super().__init__(core)
+        self.configuration = None
         self.executer = None
         self.openapi = None
         self.openmq = None
@@ -68,12 +69,13 @@ class TuyaHardware(Hardware):
                     device['state'] = value
                     self.core.log("Updated [" +  device['name'] + "] value: " + device['state'])
 
-   
-
-            #status.switch_1
-            #
-
     def _sync_refresh(self): 
+        if self.openapi == None:
+            self._sync_open()
+
+        if self.openapi == None:
+            return
+
         ids = []
         for device_id in self.deviceManager.device_map.keys():
             ids.append(device_id)
@@ -86,41 +88,64 @@ class TuyaHardware(Hardware):
         self._sync_device_map()
         self.lastUpdate = datetime.datetime.now()
 
-    def _sync_open(self, configuration):  
+    def _sync_open(self): 
+        self.core.log("Tuya trying to connect...")
+        self._sync_close()
+
+        configuration = self.configuration
+
         self.openapi = TuyaOpenAPI(configuration['endpoint'], configuration['access_id'], configuration['access_key'])
         self.openapi.set_dev_channel("hass")
         self.openapi.connect(configuration['username'], configuration['password'], configuration['country_code'], configuration['schema'])
 
-        self.openmq = TuyaOpenMQ(self.openapi)
-        self.openmq.start()
+        if self.openapi.is_connect():
+            self.openmq = TuyaOpenMQ(self.openapi)
+            self.openmq.start()
 
-        self.deviceManager = TuyaDeviceManager(self.openapi, self.openmq)
-        self._sync_refresh()
+            self.deviceManager = TuyaDeviceManager(self.openapi, self.openmq)
+            self.core.log("Tuya connected")
+        else:
+            self.core.log("Tuya failed to connect")
+            self._sync_close()
+
 
     def _sync_close(self):
-        self.openmq.stop()
+        if self.openmq:
+            self.openmq.stop()
+            self.openmq = None
+
         self.openapi = None
-        self.openmq = None
         self.deviceManager = None
 
-    async def open(self, configuration):
+    def _sync_update_status(self, device_id, status, value):
+        self.core.log(f"{type(self).__name__} run_action device_id={device_id} status={status} value={value}")
+
+
+        value = (value == 'enable') or (value == 'open')
+        commands = [{'code': status, 'value': value}]
+
+        if self.deviceManager:
+            response = self.deviceManager.send_commands(device_id, commands)
+            if response["success"]:
+                return True
+
+        return False
+
+    async def start(self, configuration):
+        self.configuration = configuration
+
         # TUYA_LOGGER.setLevel(logging.DEBUG)
         TUYA_LOGGER.setLevel(logging.INFO)
         TUYA_LOGGER.addHandler(LogHandler(self.core))
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
 
-        await self.loop.run_in_executor(self.executor, self._sync_open, configuration)
-        await super().open(configuration)
-
-    async def run_action(self, device_id, action):
-        await super().run_action(device_id, action)
-        self.core.log(f"{type(self).__name__} run_action device_id={device_id} action={action}")
-        return True
+        await self.loop.run_in_executor(self.executor, self._sync_refresh)
+        await super().start(configuration)
         
-    async def close(self):
+    async def stop(self):
         await self.loop.run_in_executor(self.executor, self._sync_close)
         self.executor.shutdown()
-        await super().close()
+        await super().stop()
 
     async def step(self):
         await super().step()
@@ -128,5 +153,11 @@ class TuyaHardware(Hardware):
 
         if delta > self.updateInterval:
             await self.loop.run_in_executor(self.executor, self._sync_refresh)
+
+    async def run_action(self, device_id, action):
+        # self.core.log(f"{type(self).__name__} run_action device_id={device_id} action={action}")
+        device_id_parts = device_id.split('|')
+        return await self.loop.run_in_executor(self.executor, self._sync_update_status, device_id_parts[1], device_id_parts[2], action)
+
         
 

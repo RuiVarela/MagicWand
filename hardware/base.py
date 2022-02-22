@@ -27,15 +27,15 @@ class Hardware:
     def hardware_type(self):
         return type(self).__name__   
 
-    async def open(self, configuration):
-        self.core.log(f"{type(self).__name__} Opened")
+    async def start(self, configuration):
+        self.core.log(f"{type(self).__name__} Started")
         
     async def step(self):
         #self.core.log(f"{type(self).__name__} Step")  
         pass
 
-    async def close(self):
-        self.core.log(f"{type(self).__name__} Closed")
+    async def stop(self):
+        self.core.log(f"{type(self).__name__} Stopped")
 
     async def run_action(self, device_id, action):
         #self.core.log(f"{type(self).__name__} run_action device_id={device_id} action={action}")
@@ -46,7 +46,7 @@ class DummyHardware(Hardware):
     def __init__(self, core):
         super().__init__(core)
 
-    async def open(self, configuration):
+    async def start(self, configuration):
         devices = []
         for current in configuration["devices"]:
             device = {
@@ -60,8 +60,7 @@ class DummyHardware(Hardware):
             devices.append(device)
         self.devices = devices
 
-        await super().open(configuration)
+        await super().start(configuration)
         
     async def run_action(self, device_id, action):
-        await super().run_action(device_id, action)
         return True
