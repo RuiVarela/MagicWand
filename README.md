@@ -13,11 +13,6 @@ sudo cp ~/MagicWand/support/magic_wand /etc/init.d/magic_wand
 sudo update-rc.d magic_wand defaults
 
 # check http://magicwand.local:8080/
-
-# forwared trafic from por 80 to 8080
-sudo iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
-
-
 ```
 ## Development Help Commands
 
@@ -50,12 +45,8 @@ sudo journalctl --vacuum-time=1s
 
 
 
-# iptables list preroute nat rules
-sudo iptables -t nat -v -L PREROUTING -n --line-number
-
-# delete rule
-sudo iptables -t nat -D PREROUTING {rule-number-here}
-
+# allow bind a lowerport like 80 to a user 
+sudo setcap 'cap_net_bind_service=+ep' /usr/bin/python3.9
 ```
 
 ## Api calls
