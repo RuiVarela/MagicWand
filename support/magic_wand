@@ -1,0 +1,67 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          magic_wand
+# Required-Start:    $network $remote_fs $syslog $time
+# Required-Stop:     $network $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Magic Wand
+# Description:       This daemon will start Magic Wand
+### END INIT INFO
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
+DESC="Magic Wand Home Automation System"
+NAME=magic_wand
+
+USERNAME=pi
+PIDFILE=/var/run/$NAME.pid
+SCRIPTNAME=/etc/init.d/$NAME
+FOLDER=/home/pi/MagicWand/
+DAEMON=/usr/bin/python
+DAEMON_SCRIPT=./main.py
+
+#
+# Function that starts the daemon/service
+#
+do_start()
+{
+      start-stop-daemon --chuid $USERNAME --start --make-pidfile --background --pidfile $PIDFILE --chdir $FOLDER --exec $DAEMON $DAEMON_SCRIPT || return 2
+}
+
+#
+# Function that stops the daemon/service
+#
+do_stop()
+{
+      PID=$(cat $PIDFILE)
+      kill -9 $PID
+      rm -rf $PIDFILE
+}
+
+case "$1" in
+  start)
+        echo "Starting $DESC" "$NAME"
+        do_start
+        ;;
+  stop)
+        echo "Stopping $DESC" "$NAME"
+        do_stop
+        ;;
+  status)
+        echo "Status " "$DAEMON" "$NAME" "not implemented"
+        ;;
+  reload)
+        echo "Reloading $DESC" "$NAME""not implemented"
+        ;;
+  restart)
+        echo "Restarting $DESC" "$NAME"
+        do_stop
+        do_start
+        ;;
+  *)
+        echo "Usage: $SCRIPTNAME {start|stop|status|restart|reload}" >&2
+        exit 3
+        ;;
+esac
+
+:
