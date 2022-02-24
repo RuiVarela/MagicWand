@@ -49,6 +49,7 @@ class Core:
         pass
 
     def log(self, message):
+        message = str(message)
         self.log_history.extend(message.splitlines())
         self.log_history = self.log_history[-self.log_history_size:]
 

@@ -42,8 +42,10 @@ class TuyaHardware(Hardware):
                     type = "switch"
                 elif status == "switch_led":
                     type = "light"
+                elif status == "control" and tuyaDevice.product_name == 'Curtain switch':
+                    type = "curtain"
                 #else:
-                #    self.core.log("Unknown status: " + status);
+                #    self.core.log(tuyaDevice.product_name + " > Unknown status: " + status);
                 
                 if type is None:
                     continue
@@ -117,17 +119,24 @@ class TuyaHardware(Hardware):
         self.openapi = None
         self.deviceManager = None
 
-    def _sync_update_status(self, device_id, status, value):
+    def _sync_update_status(self, device, device_id, status, value):
         self.core.log(f"{type(self).__name__} run_action device_id={device_id} status={status} value={value}")
 
+        if device is None:
+            self.core.log("Empty device")
+            return 0
 
-        value = (value == 'enable') or (value == 'open')
+        if device['type'] != 'curtain':
+           value = (value == 'enable') or (value == 'open')
+
         commands = [{'code': status, 'value': value}]
 
         if self.deviceManager:
             response = self.deviceManager.send_commands(device_id, commands)
             if response["success"]:
                 return True
+            else:
+                self.core.log(response)
 
         return False
 
@@ -157,7 +166,8 @@ class TuyaHardware(Hardware):
     async def run_action(self, device_id, action):
         # self.core.log(f"{type(self).__name__} run_action device_id={device_id} action={action}")
         device_id_parts = device_id.split('|')
-        return await self.loop.run_in_executor(self.executor, self._sync_update_status, device_id_parts[1], device_id_parts[2], action)
+        device = self.get_device(device_id)
+        return await self.loop.run_in_executor(self.executor, self._sync_update_status, device, device_id_parts[1], device_id_parts[2], action)
 
         
 
