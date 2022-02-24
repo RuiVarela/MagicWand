@@ -1,7 +1,9 @@
 import asyncio
+import traceback
 import pathlib
 import hardware 
 import json
+from datetime import datetime
 from http_server import HttpServer
 
 class Core:
@@ -49,11 +51,26 @@ class Core:
         pass
 
     def log(self, message):
-        message = str(message)
+        now = datetime.now()
+        timestamp = now.isoformat(sep=' ', timespec='milliseconds')
+
+        message = timestamp + " " + str(message)
         self.log_history.extend(message.splitlines())
         self.log_history = self.log_history[-self.log_history_size:]
 
-        print("> " + message)
+        print(message)
+
+    def _handle_task_result(self, task):
+        exception = task.exception()
+        if exception:
+            data = "\n" + "".join(traceback.format_exception(type(exception), exception, exception.__traceback__))
+            self.log(data)
+            
+
+    def create_task(self, coroutine):
+        task = asyncio.create_task(coroutine)
+        task.add_done_callback(self._handle_task_result)
+        return task
 
     async def pump(self):
         self.log("Core starting pump...")
@@ -64,7 +81,7 @@ class Core:
         # Web Server
         #
         self.http_server = HttpServer()
-        http_server_task = asyncio.create_task(self.http_server.run(self))
+        http_server_task = self.create_task(self.http_server.run(self))
         all_tasks.append(http_server_task)
 
         #
@@ -72,7 +89,7 @@ class Core:
         #
         hardware_tasks = []
         for current in self.hardware:
-            hardware_task = asyncio.create_task(hardware.run(self, current))
+            hardware_task = self.create_task(hardware.run(self, current))
             hardware_tasks.append(hardware_task)
             all_tasks.append(hardware_task)
 
