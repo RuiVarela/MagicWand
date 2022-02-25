@@ -91,7 +91,7 @@ function updateDeviceUi(div, device) {
     }
 }
 
-function selectGroup(group) {
+function selectGroup(group, canPushHistory) {
     console.log("Selecting Group " + group);
     elById("groups-button").textContent = group;
     var elements = elById("devices-list");
@@ -113,6 +113,12 @@ function selectGroup(group) {
 
         if (!span.classList.contains(removeElement))
             span.classList.add(addElement);
+    }
+
+    if (canPushHistory) {
+        let current = (location.hash.length == 0) ? "" : location.hash;
+        if (current != group) 
+            history.pushState("", document.title, window.location.pathname + "#" + group);  
     }
 }
 
@@ -137,7 +143,7 @@ function handleListResponse(data) {
             groups_list.appendChild(element);
 
             element.textContent = group
-            element.addEventListener("click", () => { selectGroup(group); });
+            element.addEventListener("click", () => { selectGroup(group, true); });
             
             groups_added += 1;
         }
@@ -156,9 +162,12 @@ function handleListResponse(data) {
         updateDeviceUi(div, device);
     });
 
-
     if (groups_added > 0) {
-        selectGroup(data.groups[0]);
+        let selection = data.groups[0];
+
+        if (location.hash.length > 0) 
+            selection = decodeURI(location.hash.substring(1));
+        selectGroup(selection, true);
     }
 
     console.log("Update complete.");
@@ -175,6 +184,15 @@ function updateData() {
 // Bootstrap
 //
 console.log("Initializing");
+
+window.onpopstate = function(event) {
+
+    if (location.hash.length > 0) {
+        let selection = decodeURI(location.hash.substring(1));
+        selectGroup(selection, false);
+    } 
+
+};
 
 // Close the dropdown menu if the user clicks outside of it
 window.onclick = function (event) {
