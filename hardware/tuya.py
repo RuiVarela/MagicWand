@@ -2,6 +2,7 @@ import datetime
 import logging
 import asyncio
 import concurrent.futures
+import traceback
 
 from hardware.base import Hardware
 from tuya_iot import (
@@ -72,20 +73,26 @@ class TuyaHardware(Hardware):
                     self.core.log("Updated [" +  device['name'] + "] value: " + device['state'])
 
     def _sync_refresh(self): 
-        if self.openapi == None:
-            self._sync_open()
+        try:
 
-        if self.openapi == None:
-            return
+            if self.openapi == None:
+                self._sync_open()
 
-        ids = []
-        for device_id in self.deviceManager.device_map.keys():
-            ids.append(device_id)
+            if self.openapi == None:
+                return
 
-        if len(ids) == 0:
-            self.deviceManager.update_device_list_in_smart_home()
-        else:
-            self.deviceManager._update_device_list_status_cache(ids)
+            ids = []
+            for device_id in self.deviceManager.device_map.keys():
+                ids.append(device_id)
+
+            if len(ids) == 0:
+                self.deviceManager.update_device_list_in_smart_home()
+            else:
+                self.deviceManager._update_device_list_status_cache(ids)
+                
+        except Exception as exception:
+            data = "_sync_refresh:\n" + "".join(traceback.format_exception(type(exception), exception, exception.__traceback__))
+            self.log(data)
 
         self._sync_device_map()
         self.lastUpdate = datetime.datetime.now()
