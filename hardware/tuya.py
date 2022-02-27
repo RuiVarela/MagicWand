@@ -91,8 +91,7 @@ class TuyaHardware(Hardware):
                 self.deviceManager._update_device_list_status_cache(ids)
                 
         except Exception as exception:
-            data = "_sync_refresh:\n" + "".join(traceback.format_exception(type(exception), exception, exception.__traceback__))
-            self.log(data)
+            self.core.log_exception('_sync_refresh', exception)
 
         self._sync_device_map()
         self.lastUpdate = datetime.datetime.now()
@@ -134,17 +133,22 @@ class TuyaHardware(Hardware):
             return 0
 
         if device['type'] != 'curtain':
-           value = (value == 'enable') or (value == 'open')
+            value = (value == 'enable') or (value == 'open')
 
         commands = [{'code': status, 'value': value}]
+        
+        try:
 
-        if self.deviceManager:
-            response = self.deviceManager.send_commands(device_id, commands)
-            if response["success"]:
-                return True
-            else:
-                self.core.log(response)
+            if self.deviceManager:
+                response = self.deviceManager.send_commands(device_id, commands)
+                if response["success"]:
+                    return True
+                else:
+                    self.core.log(response)
 
+        except Exception as exception:
+            self.core.log_exception('_sync_update_status', exception)
+            
         return False
 
     async def start(self, configuration):

@@ -60,13 +60,15 @@ class Core:
 
         print(message)
 
+    def log_exception(self, tag, exception):
+        data = tag + "\n" + "".join(traceback.format_exception(type(exception), exception, exception.__traceback__))
+        self.log(data)
+
     def _handle_task_result(self, task):
         exception = task.exception()
         if exception:
-            data = "\n" + "".join(traceback.format_exception(type(exception), exception, exception.__traceback__))
-            self.log(data)
+            self.log_exception('handle_task_result', exception)
             
-
     def create_task(self, coroutine):
         task = asyncio.create_task(coroutine)
         task.add_done_callback(self._handle_task_result)
