@@ -12,9 +12,9 @@ from tuya_iot import (
     TUYA_LOGGER
 )
 
-class LogHandler(logging.StreamHandler):
+class LogHandler(logging.Handler):
     def __init__(self, core):
-        super().__init__(self)
+        super().__init__(logging.DEBUG)
         self.core = core
 
     def emit(self, record):
