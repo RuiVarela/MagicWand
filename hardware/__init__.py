@@ -1,5 +1,6 @@
 import asyncio
 from hardware.base import DummyHardware
+from hardware.base import MultiDeviceHardware
 from hardware.command import CommandHardware
 from hardware.tuya import TuyaHardware
 
