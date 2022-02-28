@@ -12,9 +12,12 @@ class CommandHardware(Hardware):
 
     async def start(self, configuration):
         devices = []
+        counter = 0
         for current in configuration["devices"]:
+            counter = counter + 1
+
             device = {
-                'id': self.hardware_type() + "_" + current["id"],
+                'id': self.hardware_type() + "_" + str(counter),
                 'name': current["name"],
                 'type': current["type"],
                 'state': 'off',

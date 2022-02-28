@@ -51,9 +51,12 @@ class DummyHardware(Hardware):
 
     async def start(self, configuration):
         devices = []
+        counter = 0
         for current in configuration["devices"]:
+            counter = counter + 1
+
             device = {
-                'id': self.hardware_type() + "_" + current["id"],
+                'id': self.hardware_type() + "_" + str(counter),
                 'name': current["name"],
                 'type': current["type"],
                 'state': 'off',
@@ -76,10 +79,13 @@ class MultiDeviceHardware(Hardware):
 
     async def start(self, configuration):
         devices = []
+        counter = 0
         for current in configuration["devices"]:
+            counter = counter + 1
+
             if 'children' in current and isinstance(current["children"], list):
                 device = {
-                    'id': self.hardware_type() + "_" + current["id"],
+                    'id': self.hardware_type() + "_" + str(counter),
                     'name': current["name"],
                     'type': current["type"],
                     'state': 'off',
@@ -95,6 +101,8 @@ class MultiDeviceHardware(Hardware):
         await super().start(configuration)
         
     async def run_action(self, device_id, action):
+        self.core.log(f"{type(self).__name__} run_action device_id={device_id} action={action}")
+        
         children = self.get_device(device_id)['cfg']['children']
         for current in children:
             device = self.core.get_device_by_name(current)

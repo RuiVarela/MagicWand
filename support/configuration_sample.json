@@ -11,46 +11,46 @@
     
     "CommandHardware": {
         "devices": [
-            { "id": "1",    "name": "Kitchen CMD device 1",  "type": "switch",   "script": "sample_device.sh" }
+            { "name": "Kitchen CMD device 1",  "type": "switch",   "script": "sample_device.sh" }
         ]
     },
 
     "DummyHardware": {
         "devices": [
-            { "id": "1",    "name": "Kitchen sample device 1",  "type": "switch" },
-            { "id": "2",    "name": "Kitchen sample device 2",  "type": "switch" }, 
-            { "id": "3",    "name": "Kitchen sample device 3",  "type": "switch" },
-            { "id": "4",    "name": "Kitchen sample device 4",  "type": "switch" },
-            { "id": "5",    "name": "Hall sample device 1",     "type": "switch" },
-            { "id": "6",    "name": "Hall sample device 2",     "type": "switch" },
-            { "id": "7",    "name": "Hall sample device 3",     "type": "switch" },
-            { "id": "8",    "name": "Hall sample device 4",     "type": "switch" },
-            { "id": "9",    "name": "Hall sample device 5",     "type": "switch" },
+            { "name": "Kitchen sample device 1",  "type": "switch" },
+            { "name": "Kitchen sample device 2",  "type": "switch" }, 
+            { "name": "Kitchen sample device 3",  "type": "switch" },
+            { "name": "Kitchen sample device 4",  "type": "switch" },
+            { "name": "Hall sample device 1",     "type": "switch" },
+            { "name": "Hall sample device 2",     "type": "switch" },
+            { "name": "Hall sample device 3",     "type": "switch" },
+            { "name": "Hall sample device 4",     "type": "switch" },
+            { "name": "Hall sample device 5",     "type": "switch" },
             
-            { "id": "10",   "name": "Hall sample device 6",     "type": "light"  },
-            { "id": "11",   "name": "Hall sample device 7",     "type": "light"  },
-            { "id": "12",   "name": "Hall sample device 8",     "type": "light"  },
-            { "id": "13",   "name": "Hall sample device 9",     "type": "light"  },
-            { "id": "14",   "name": "Hall sample device 10",    "type": "light"  },
-            { "id": "15",   "name": "Hall sample device 11",    "type": "light"  },
-            { "id": "16",   "name": "Hall sample device 12",    "type": "light"  },
-            { "id": "17",   "name": "Hall sample device 13",    "type": "light"  },
+            { "name": "Hall sample device 6",     "type": "light"  },
+            { "name": "Hall sample device 7",     "type": "light"  },
+            { "name": "Hall sample device 8",     "type": "light"  },
+            { "name": "Hall sample device 9",     "type": "light"  },
+            { "name": "Hall sample device 10",    "type": "light"  },
+            { "name": "Hall sample device 11",    "type": "light"  },
+            { "name": "Hall sample device 12",    "type": "light"  },
+            { "name": "Hall sample device 13",    "type": "light"  },
 
-            { "id": "18",   "name": "Living Room  device 1",    "type": "curtain" },
-            { "id": "19",   "name": "Living Room  device 2",    "type": "curtain" },
-            { "id": "20",   "name": "Living Room  device 3",    "type": "curtain" },
-            { "id": "21",   "name": "Living Room  device 4",    "type": "curtain" },
-            { "id": "22",   "name": "Living Room  device 5",    "type": "curtain" },
-            { "id": "23",   "name": "Living Room  device 6",    "type": "curtain" },
-            { "id": "24",   "name": "Living Room  device 7",    "type": "curtain" },
-            { "id": "25",   "name": "Living Room  device 8",    "type": "curtain" }
+            { "name": "Living Room  device 1",    "type": "curtain" },
+            { "name": "Living Room  device 2",    "type": "curtain" },
+            { "name": "Living Room  device 3",    "type": "curtain" },
+            { "name": "Living Room  device 4",    "type": "curtain" },
+            { "name": "Living Room  device 5",    "type": "curtain" },
+            { "name": "Living Room  device 6",    "type": "curtain" },
+            { "name": "Living Room  device 7",    "type": "curtain" },
+            { "name": "Living Room  device 8",    "type": "curtain" }
         ]
     },
 
     "MultiDeviceHardware": {
         "devices": [
-            { "id": "1", "name": "Kitchen Multi 1", "type": "switch",   "children": ["Kitchen sample device 3", "Kitchen sample device 4"] },
-            { "id": "2", "name": "Hall Multi 2",    "type": "curtain",  "children": ["Living Room device 2", "Living Room device 4"] }
+            { "name": "Kitchen Multi 1", "type": "switch",   "children": ["Kitchen sample device 3", "Kitchen sample device 4"] },
+            { "name": "Hall Multi 2",    "type": "curtain",  "children": ["Living Room device 2", "Living Room device 4"] }
         ]
     },
 
