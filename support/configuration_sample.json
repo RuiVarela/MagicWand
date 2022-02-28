@@ -47,6 +47,13 @@
         ]
     },
 
+    "MultiDeviceHardware": {
+        "devices": [
+            { "id": "1", "name": "Kitchen Multi 1", "type": "switch",   "children": ["Kitchen sample device 3", "Kitchen sample device 4"] },
+            { "id": "2", "name": "Hall Multi 2",    "type": "curtain",  "children": ["Living Room device 2", "Living Room device 4"] }
+        ]
+    },
+
     "TuyaHardware": {
         "endpoint": "https://openapi.tuyaeu.com",
         "access_id": "access_id", 

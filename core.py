@@ -41,6 +41,9 @@ class Core:
         if "DummyHardware" in self.configuration:
             self.hardware.append(hardware.DummyHardware(self))
 
+        if "MultiDeviceHardware" in self.configuration:
+            self.hardware.append(hardware.MultiDeviceHardware(self))
+
         if "CommandHardware" in self.configuration:        
             self.hardware.append(hardware.CommandHardware(self))
         
@@ -120,6 +123,16 @@ class Core:
             devices.extend(current.get_devices())
         return devices
 
+    def get_device_by_name(self, name):
+        devices = [d for d in self.get_devices() if d['name'] == name]
+        if len(devices) > 0:
+            return devices[0]
+        return None
+
+
+    def _devices_sort_func(self, element):
+        return element['group'] + " " + element['type'] + " " + element['name']
+
     async def get_device_list(self):
         devices = self.get_devices()
         groups = self.get_groups()
@@ -143,4 +156,6 @@ class Core:
             element['group'] = group
             
             records.append(element)
+
+        records.sort(key=self._devices_sort_func)   
         return (groups, records)
