@@ -104,7 +104,7 @@ class Core:
 
         self.log("Core Shutting down")
         await asyncio.gather(*all_tasks)
-        self.log("Core Shutting completed")
+        self.log("Core shutdown completed")
 
     async def run_device_action(self, device_id, action):
         for current in self.hardware:

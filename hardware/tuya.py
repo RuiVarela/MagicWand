@@ -108,7 +108,7 @@ class TuyaHardware(Hardware):
 
         if self.openapi.is_connect():
             self.openmq = TuyaOpenMQ(self.openapi)
-            self.openmq.start()
+            # self.openmq.start()
 
             self.deviceManager = TuyaDeviceManager(self.openapi, self.openmq)
             self.core.log("Tuya connected")
@@ -118,15 +118,22 @@ class TuyaHardware(Hardware):
 
 
     def _sync_close(self):
-        if self.openmq:
+        if self.deviceManager:
+            self.deviceManager.device_listeners.clear()
+            self.deviceManager.device_map.clear()
+            self.deviceManager = None
+
+        if self.openmq and self.openmq.is_alive():
+            self.openmq.client.loop_stop()
             self.openmq.stop()
-            self.openmq = None
+            self.openmq.join()
+
+        self.openmq = None
 
         self.openapi = None
-        self.deviceManager = None
 
     def _sync_update_status(self, device, device_id, status, value):
-        self.core.log(f"{type(self).__name__} run_action device_id={device_id} status={status} value={value}")
+        self.core.log(f"{type(self).__name__} run_axction device_id={device_id} status={status} value={value}")
 
         if device is None:
             self.core.log("Empty device")
@@ -157,6 +164,8 @@ class TuyaHardware(Hardware):
         # TUYA_LOGGER.setLevel(logging.DEBUG)
         TUYA_LOGGER.setLevel(logging.INFO)
         TUYA_LOGGER.addHandler(LogHandler(self.core))
+
+
         self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
 
         await self.loop.run_in_executor(self.executor, self._sync_refresh)
@@ -169,6 +178,10 @@ class TuyaHardware(Hardware):
 
     async def step(self):
         await super().step()
+
+        if self.openapi is None:
+            return
+
         delta = round((datetime.datetime.now() - self.lastUpdate).total_seconds())
 
         if delta > self.updateInterval:

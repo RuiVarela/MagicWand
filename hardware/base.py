@@ -99,6 +99,17 @@ class MultiDeviceHardware(Hardware):
 
 
         await super().start(configuration)
+
+
+    async def step(self):
+        for device in self.get_devices():
+            state = 'on'
+            for current in device['cfg']['children']:
+                children_device = self.core.get_device_by_name(current)
+                if children_device and children_device['state'] != 'on':
+                    state = 'off'
+            device['state'] = state
+
         
     async def run_action(self, device_id, action):
         self.core.log(f"{type(self).__name__} run_action device_id={device_id} action={action}")

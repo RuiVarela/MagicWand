@@ -12,6 +12,8 @@ cp ./support/configuration_sample.json ./configuration.json
 sudo cp ~/MagicWand/support/magic_wand /etc/init.d/magic_wand
 sudo update-rc.d magic_wand defaults
 
+sudo service magic_wand restart
+
 # check http://magicwand.local:8080/
 ```
 ## Development Help Commands
