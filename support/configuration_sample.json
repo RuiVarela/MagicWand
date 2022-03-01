@@ -3,7 +3,7 @@
         "port": 8080
     }, 
 
-    "Groups": ["Home", "Master Bedroom", "Baby Bedroom", "Bathroom", "Hall", "Living Room", "Kitchen"],
+    "Groups": ["Home", "Hall", "Living Room", "Kitchen"],
     "Names": [
         { "device_name": "Hall sample device 1", "renamed": "Hall sample device One" },
         { "device_name": "Hall sample device 2", "renamed": "Hall sample device Two" }
