@@ -6,6 +6,8 @@ function elByCls(cls) { return document.getElementsByClassName(cls); }
 function makeId(base, name) { return base + "_" + name.replace(' ', '_').toLowerCase(); }
 
 function homeGroup() { return "Home"; }
+function dashboardGroup() { return "Dashboard"; }
+function showGroupName(group) { return (group == homeGroup()) || (group == dashboardGroup()); }
 
 //
 // App Logic
@@ -51,11 +53,9 @@ function updateDeviceUi(div, device) {
     }
 
     html += '<div class="device_label">'
-    if (group != homeGroup()) {
-        let selected_group = elById("groups-button").textContent;
-        let toggler = (selected_group == homeGroup()) ? "showInline" : "hide";
-        html += '<span class="device_group ' + toggler + '">' + group + ' </span>'
-    }
+    let selected_group = elById("groups-button").textContent;
+    let toggler = showGroupName(selected_group) ? "showInline" : "hide";
+    html += '<span class="device_group ' + toggler + '">' + group + ' </span>'
     html += name + "</div>"
     div.innerHTML = html;
 
@@ -96,15 +96,17 @@ function selectGroup(group, canPushHistory) {
     elById("groups-button").textContent = group;
     var elements = elById("devices-list");
     elements.childNodes.forEach(div => {
-        if (div.device.group == group || group == homeGroup()) {
+        if (div.device.group == group || 
+            group == homeGroup() || 
+            (group == dashboardGroup() && div.device.dashboard)) {
             div.style.display = 'block';
         } else {
             div.style.display = 'none';
         }
     });
 
-    let addElement = (group == homeGroup()) ? "showInline" : "hide";
-    let removeElement = (group == homeGroup()) ? "hide" : "showInline";
+    let addElement = showGroupName(group) ? "showInline" : "hide";
+    let removeElement = showGroupName(group) ? "hide" : "showInline";
     elements = elByCls("device_group");
     for (let i = 0; i != elements.length; ++i) {
         let span = elements[i];

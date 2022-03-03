@@ -15,6 +15,7 @@ class Core:
 
         self.groups = []
         self.name_mapper = {}
+        self.dashboard_devices = []
         self.hardware = []
         self.http_server = None
         self.log_history_size = 100 * 1024
@@ -35,6 +36,9 @@ class Core:
                 if "device_name" in record:
                     self.name_mapper[record['device_name']] = record['renamed']
 
+        if "DashboardDevices" in self.configuration:
+            self.dashboard_devices = self.configuration["DashboardDevices"]
+        
         #
         # Add hardware
         #
@@ -43,6 +47,9 @@ class Core:
 
         if "MultiDeviceHardware" in self.configuration:
             self.hardware.append(hardware.MultiDeviceHardware(self))
+
+        if "ButtonHardware" in self.configuration:
+            self.hardware.append(hardware.ButtonHardware(self))
 
         if "CommandHardware" in self.configuration:        
             self.hardware.append(hardware.CommandHardware(self))
@@ -143,6 +150,11 @@ class Core:
         for current in devices:       
             group = 'Home'
             name = current["name"]
+            on_dashboard = False
+
+            if name in self.dashboard_devices:
+                on_dashboard = True
+
             if name in self.name_mapper:
                 name = self.name_mapper[name]
 
@@ -156,6 +168,7 @@ class Core:
 
             element['name'] = name    
             element['group'] = group
+            element['dashboard'] = on_dashboard
             
             records.append(element)
 

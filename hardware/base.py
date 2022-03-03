@@ -1,6 +1,8 @@
 from distutils import core
 
-
+#
+# Base Hardware Type
+#
 class Hardware:
     def __init__(self, core):
         self.core = core
@@ -16,7 +18,7 @@ class Hardware:
 
     def complete_action(self, device_id, action):
         device = self.get_device(device_id)
-        if device['type'] == 'curtain':
+        if device['type'] == 'curtain' or device['type'] == 'button':
             return
 
         if action == "enable" or action == "open":
@@ -44,7 +46,9 @@ class Hardware:
         #self.core.log(f"{type(self).__name__} run_action device_id={device_id} action={action}")
         return False
 
-        
+#
+# Dummy - a helper device for development
+#         
 class DummyHardware(Hardware):
     def __init__(self, core):
         super().__init__(core)
@@ -72,7 +76,11 @@ class DummyHardware(Hardware):
         self.core.log(f"{type(self).__name__} run_action device_id={device_id} action={action}")
         return True
 
-
+#
+# MultiDevice
+# - groups devices of the same kind
+# - replays the same command to all children
+#
 class MultiDeviceHardware(Hardware):
     def __init__(self, core):
         super().__init__(core)
@@ -120,6 +128,52 @@ class MultiDeviceHardware(Hardware):
             if device:
                 await self.core.run_device_action(device['id'], action)
             else:
-                self.core.log("Unknowns children name: " + current)
+                self.core.log("Unknown children name: " + current)
 
+        return True
+
+#
+# Button
+# a virtual button that runs commands on children devices
+#
+class ButtonHardware(Hardware):
+    def __init__(self, core):
+        super().__init__(core)
+
+    async def start(self, configuration):
+        devices = []
+        counter = 0
+        for current in configuration["devices"]:
+            counter = counter + 1
+
+            if 'actions' in current and isinstance(current["actions"], list):
+                device = {
+                    'id': self.hardware_type() + "_" + str(counter),
+                    'name': current["name"],
+                    'type': 'button',
+                    'state': 'off',
+
+                    'cfg': current
+                }
+                devices.append(device)
+                self.devices = devices
+            else:
+                self.core.log("invalid actions!")
+
+
+        await super().start(configuration)
+        
+
+    async def run_action(self, device_id, action):
+        self.core.log(f"{type(self).__name__} run_action device_id={device_id} action={action}")
+        
+        actions = self.get_device(device_id)['cfg']['actions']
+        for current in actions:
+            device_name = current['device']
+            device_action = current['action']
+            device = self.core.get_device_by_name(device_name)
+            if device:
+                await self.core.run_device_action(device['id'], device_action)
+            else:
+                self.core.log("Unknown device_name " + device_name + " device_action " + device_action)
         return True

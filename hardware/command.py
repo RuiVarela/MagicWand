@@ -43,8 +43,9 @@ class CommandHardware(Hardware):
         return (result == 0)
 
     def _execute_command(self, device_id, action):
-        cfg_id = self.get_device(device_id)["cfg"]["id"]
-        script = self.get_device(device_id)["cfg"]["script"]
+        device = self.get_device(device_id)
+        cfg_id = device["cfg"]["name"]
+        script = device["cfg"]["script"]
 
         args = [f"scripts/{script}", cfg_id, action]
 
