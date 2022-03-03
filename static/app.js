@@ -53,9 +53,11 @@ function updateDeviceUi(div, device) {
     }
 
     html += '<div class="device_label">'
-    let selected_group = elById("groups-button").textContent;
-    let toggler = showGroupName(selected_group) ? "showInline" : "hide";
-    html += '<span class="device_group ' + toggler + '">' + group + ' </span>'
+    if (group != homeGroup()) {
+        let selected_group = elById("groups-button").textContent;
+        let toggler = showGroupName(selected_group) ? "showInline" : "hide";
+        html += '<span class="device_group ' + toggler + '">' + group + ' </span>'
+    }
     html += name + "</div>"
     div.innerHTML = html;
 
