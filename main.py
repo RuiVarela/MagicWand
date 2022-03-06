@@ -6,9 +6,7 @@ async def main():
     while keep_running:
         core = Core()
 
-        await core.setup()
         await core.pump()
-        await core.teardown()
 
         keep_running = core.restart
 

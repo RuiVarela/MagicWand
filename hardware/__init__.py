@@ -3,14 +3,15 @@ from hardware.base import DummyHardware
 from hardware.base import MultiDeviceHardware
 from hardware.base import ButtonHardware
 from hardware.command import CommandHardware
-from hardware.tuya import TuyaHardware
+from hardware.tuya_cloud import TuyaCloudHardware
+from hardware.miio_yeelight import MiioYeelightHardware
 
 #
 # Run hardware Task
 #
 async def run(core, current_hardware):
     configuration = core.configuration[current_hardware.hardware_type()]
-    interval = 5
+    interval = 1
     
     await current_hardware.start(configuration)
 

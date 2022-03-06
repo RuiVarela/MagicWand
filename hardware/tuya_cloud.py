@@ -1,8 +1,6 @@
 import datetime
 import logging
 import asyncio
-import concurrent.futures
-import traceback
 
 from hardware.base import Hardware
 from tuya_iot import (
@@ -21,11 +19,9 @@ class LogHandler(logging.Handler):
         msg = self.format(record)
         self.core.log(msg)
 
-class TuyaHardware(Hardware):
+class TuyaCloudHardware(Hardware):
     def __init__(self, core):
         super().__init__(core)
-        self.configuration = None
-        self.executer = None
         self.openapi = None
         self.openmq = None
         self.deviceManager = None
@@ -159,21 +155,17 @@ class TuyaHardware(Hardware):
         return False
 
     async def start(self, configuration):
-        self.configuration = configuration
+        await super().start(configuration)
 
         # TUYA_LOGGER.setLevel(logging.DEBUG)
         TUYA_LOGGER.setLevel(logging.INFO)
         TUYA_LOGGER.addHandler(LogHandler(self.core))
-
-
-        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
-
+        
         await self.loop.run_in_executor(self.executor, self._sync_refresh)
-        await super().start(configuration)
+
         
     async def stop(self):
         await self.loop.run_in_executor(self.executor, self._sync_close)
-        self.executor.shutdown()
         await super().stop()
 
     async def step(self):

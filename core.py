@@ -6,6 +6,7 @@ import json
 from datetime import datetime
 from http_server import HttpServer
 
+
 class Core:
     def __init__(self):
         self.configuration = None
@@ -21,7 +22,33 @@ class Core:
         self.log_history_size = 100 * 1024
         self.log_history = []
         
-    async def setup(self):
+    def log(self, message):
+        now = datetime.now()
+        timestamp = now.isoformat(sep=' ', timespec='milliseconds')
+
+        message = timestamp + " " + str(message)
+        self.log_history.extend(message.splitlines())
+        self.log_history = self.log_history[-self.log_history_size:]
+
+        print(message)
+
+    def log_exception(self, tag, exception):
+        data = tag + "\n" + "".join(traceback.format_exception(type(exception), exception, exception.__traceback__))
+        self.log(data)
+
+    def _handle_task_result(self, task):
+        exception = task.exception()
+        if exception:
+            self.log_exception('handle_task_result', exception)
+            
+    def create_task(self, coroutine):
+        task = asyncio.create_task(coroutine)
+        task.add_done_callback(self._handle_task_result)
+        return task
+
+    async def pump(self):
+        self.log("Core setting up...")
+
         configuration_path = pathlib.Path(__file__).parent / 'configuration.json'
         configuration_file = open(configuration_path, "r")
         self.configuration = json.loads(configuration_file.read())
@@ -54,40 +81,16 @@ class Core:
         if "CommandHardware" in self.configuration:        
             self.hardware.append(hardware.CommandHardware(self))
         
-        if "TuyaHardware" in self.configuration:
-            self.hardware.append(hardware.TuyaHardware(self))
+        if "TuyaCloudHardware" in self.configuration:
+            self.hardware.append(hardware.TuyaCloudHardware(self))
 
-    async def teardown(self):
-        pass
-
-    def log(self, message):
-        now = datetime.now()
-        timestamp = now.isoformat(sep=' ', timespec='milliseconds')
-
-        message = timestamp + " " + str(message)
-        self.log_history.extend(message.splitlines())
-        self.log_history = self.log_history[-self.log_history_size:]
-
-        print(message)
-
-    def log_exception(self, tag, exception):
-        data = tag + "\n" + "".join(traceback.format_exception(type(exception), exception, exception.__traceback__))
-        self.log(data)
-
-    def _handle_task_result(self, task):
-        exception = task.exception()
-        if exception:
-            self.log_exception('handle_task_result', exception)
-            
-    def create_task(self, coroutine):
-        task = asyncio.create_task(coroutine)
-        task.add_done_callback(self._handle_task_result)
-        return task
-
-    async def pump(self):
-        self.log("Core starting pump...")
+        if "MiioYeelightHardware" in self.configuration:
+            self.hardware.append(hardware.MiioYeelightHardware(self))
 
         all_tasks = []
+
+        self.log("Core starting pump...")
+        loop = asyncio.get_event_loop()
 
         #
         # Web Server
@@ -110,6 +113,7 @@ class Core:
             await asyncio.sleep(1)
 
         self.log("Core Shutting down")
+
         await asyncio.gather(*all_tasks)
         self.log("Core shutdown completed")
 
@@ -165,6 +169,9 @@ class Core:
             element = current.copy()
             if 'cfg' in element:
                 element.pop('cfg')
+
+            if 'hardware' in element:
+                element.pop('hardware')
 
             element['name'] = name    
             element['group'] = group

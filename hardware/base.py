@@ -1,4 +1,6 @@
-from distutils import core
+import datetime
+import asyncio
+import concurrent.futures
 
 #
 # Base Hardware Type
@@ -6,8 +8,17 @@ from distutils import core
 class Hardware:
     def __init__(self, core):
         self.core = core
+        self.executer = None 
+        self.configuration = None
+        self.loop = None
         self.devices = []
         pass
+
+    def elapsed(self, ts, seconds):
+        if ts == None:
+            return True
+        delta = round((datetime.datetime.now() - ts).total_seconds())
+        return delta > seconds
 
     def get_device(self, device_id):
         devices = self.get_devices()
@@ -33,14 +44,23 @@ class Hardware:
         return type(self).__name__   
 
     async def start(self, configuration):
+        self.configuration = configuration
+
+        self.loop = asyncio.get_event_loop()
+        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+
         self.core.log(f"{type(self).__name__} Started")
+        
+    async def stop(self):
+        self.executor.shutdown()
+        self.executor = None
+        self.loop = None
+        self.core.log(f"{type(self).__name__} Stopped")
+
         
     async def step(self):
         #self.core.log(f"{type(self).__name__} Step")  
         pass
-
-    async def stop(self):
-        self.core.log(f"{type(self).__name__} Stopped")
 
     async def run_action(self, device_id, action):
         #self.core.log(f"{type(self).__name__} run_action device_id={device_id} action={action}")
