@@ -36,7 +36,7 @@ Base blocks:
 
 Hardware:
 - `DummyHardware` Fake hardware for development purposes. does not actuate on anything. it just show up on screen.
-- `CommandHardware` Harware that is controlled via a shellscript. You should place your scripts on the `script` folder. The device name and actual action is passe as arguments to the script. A good reference for this is the provided `sample_device.sh`
+- `CommandHardware` Harware that is controlled via a shellscript. You should place your scripts on the `script` folder. The device name and actual action are passed as arguments to the script. A good reference for this is the provided `sample_device.sh`
 - `TuyaCloudHardware` A tuya driver that uses tuya cloud api. Setting up tuya cloud is a pretty messed up process, [this is the sdk reference](https://github.com/tuya/tuya-iot-python-sdk) but basically you need to create a project and link your mobile app to you project. In my case I use the "Smart Life" app. You don't need to create assets and users for assets.
 - `MultiDeviceHardware` Virtual Hardware that joins devices of the same kind on a single device. With this you can i.e. group `Living Room Ceiling Light`, and `Living Room Tv Light` on a virtual device `Living Room Light`. and `Living Room Light` turns on or off both his children. 
 - `ButtonHardware` Virtual Button that runs a list of device actions when pressed.
