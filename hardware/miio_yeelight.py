@@ -16,6 +16,7 @@ class MiioYeelightHardware(Hardware):
     def __init__(self, core):
         super().__init__(core)
         self.discover_count = 0
+
         self.last_refresh = None
         self.refresh_interval = 5
 
@@ -114,12 +115,17 @@ class MiioYeelightHardware(Hardware):
                 all_discovered = False
                 continue
 
-            status = current['hardware'].status()
+            try:
+                status = current['hardware'].status()
 
-            value = "on" if status.is_on else "off"
-            if current['state'] != value:
-                current['state'] = value
-                self.core.log("Updated [" +  current['name'] + "] value: " + current['state'])
+                value = "on" if status.is_on else "off"
+                if current['state'] != value:
+                    current['state'] = value
+                    self.core.log("Updated [" +  current['name'] + "] value: " + current['state'])
+
+            except Exception as exception:
+                self.core.log_exception('failed to create yeelight', exception)
+                return False
 
         
         self.discover_interval = 10 * 60 if all_discovered else 30
