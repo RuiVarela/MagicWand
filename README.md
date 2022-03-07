@@ -1,12 +1,19 @@
 # MagicWand
-Control your house with simplicity
+MagicWand is a super lightweight home controller
 
+It was developed to run on a raspberry pi zero. A zero is more than capable to control you home devices. Homeassistant sounds like an amazing sofware but it is just too heavy.   
+It exposes a web app on your lan that acts as a home controller, allowing you to control your devices from anyware on you local network. You are not locked to a single installation of a Vendor app.
+
+Supported Hardware
+- Tuya devices
+- Shell scripts
 
 # Runtime Setup
 ```
 # Create a configuration file base on the provided sample
 # you should then setup your handware
 cp ./support/configuration_sample.json ./configuration.json
+python .\main.py
 
 # install magic wand as a service
 sudo cp ~/MagicWand/support/magic_wand /etc/init.d/magic_wand
@@ -16,6 +23,24 @@ sudo service magic_wand restart
 
 # check http://magicwand.local:8080/
 ```
+
+## Configuration Blocks
+The best way to understard the configurations blocks is tho check the `support/configuration_sample.json`.   
+
+Base blocks:
+- `HttpServer` block configures the web api server. you can currently set the listening port on this block.
+- `Groups` Lists the visible groups in the web app. Devices are grouped using the initial text in the name field. A device named `Hall Light` would match an pre existing `Hall` group.
+- `Names` renames devices on the ui.
+- `DashboardDevices` is a list of devices' names that will also appear in a special group called "Dashboard". "Dashboard" will only appear if it is also listed on the `Groups` block. 
+
+Hardware:
+- `DummyHardware` Fake hardware for development purposes. does not actuate on anything. it just show up on screen.
+- `CommandHardware` Harware that is controlled via a shellscript. You should place your scripts on the `script` folder. The device name and actual action is passe as arguments to the script. A good reference for this is the provided `sample_device.sh`
+- `TuyaHardware` A tuya driver that uses tuya cloud api. Setting up tuya cloud is a pretty messed up process, [this is the sdk reference](https://github.com/tuya/tuya-iot-python-sdk) but basically you need to create a project and link your mobile app to you project. In my case I use the "Smart Life" app. You don't need to create assets and users for assets.
+- `MultiDeviceHardware` Virtual Hardware that joins devices of the same kind on a single device. With this you can i.e. group `Living Room Ceiling Light`, and `Living Room Tv Light` on a virtual device `Living Room Light`. and `Living Room Light` turns on or off both his children. 
+- `ButtonHardware` Virtual Button that runs a list of device actions when pressed.
+
+
 ## Development Help Commands
 
 ```

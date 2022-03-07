@@ -3,12 +3,14 @@
         "port": 8080
     }, 
 
-    "Groups": ["Home", "Hall", "Living Room", "Kitchen"],
+    "Groups": ["Dashboard", "Home", "Hall", "Living Room", "Kitchen"],
     "Names": [
         { "device_name": "Hall sample device 1", "renamed": "Hall sample device One" },
         { "device_name": "Hall sample device 2", "renamed": "Hall sample device Two" }
     ],
     
+    "DashboardDevices": ["Living Room off", "Hall sample device 11", "Living Room  device 7"],
+
     "CommandHardware": {
         "devices": [
             { "name": "Kitchen CMD device 1",  "type": "switch",   "script": "sample_device.sh" }
@@ -51,6 +53,15 @@
         "devices": [
             { "name": "Kitchen Multi 1", "type": "switch",   "children": ["Kitchen sample device 3", "Kitchen sample device 4"] },
             { "name": "Hall Multi 2",    "type": "curtain",  "children": ["Living Room device 2", "Living Room device 4"] }
+        ]
+    },
+
+    "ButtonHardware": {
+        "devices": [
+            { "name": "Living Room off", "actions": [
+                { "device": "Hall sample device 1", "action": "disable" },
+                { "device": "Hall sample device 2", "action": "disable" } ] 
+            }
         ]
     },
 
