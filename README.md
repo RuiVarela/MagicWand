@@ -47,7 +47,7 @@ Hardware:
 ```
 # Create and select a venv
 python3 -m venv .venv
-.venv\Scripts\activate.bat
+source .venv/bin/activate
 
 # Install requirements
 pip install -r requirements.txt
@@ -55,14 +55,11 @@ pip install -r requirements.txt
 # Freeze requirements
 pip freeze > requirements.txt
 
-
 # Clean python cache
 find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
 
-
 # copy folder to pi excluding hidden files
 scp -r ./MagicWand/[\!.]* pi@magicwand.local:/home/pi/MagicWand
-
 
 # show service log
 journalctl -u magic_wand
@@ -70,7 +67,6 @@ journalctl -u magic_wand
 # delete service logs
 sudo journalctl --rotate
 sudo journalctl --vacuum-time=1s
-
 
 
 # allow bind a lowerport like 80 to a user 
