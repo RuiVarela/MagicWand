@@ -65,7 +65,13 @@
         ]
     },
 
-    "TuyaHardware": {
+    "MiioYeelightHardware": {
+        "devices": [
+            { "name": "Baby Bedroom Bedside Light", "id": "123545", "token": "kkkkkkkk" }
+        ]   
+    },
+
+    "TuyaCloudHardware": {
         "endpoint": "https://openapi.tuyaeu.com",
         "access_id": "access_id", 
         "access_key": "access_key", 
