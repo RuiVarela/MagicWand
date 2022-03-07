@@ -1,3 +1,4 @@
+from errno import ESTALE
 from pytz import NonExistentTimeError
 from hardware.base import Hardware
 from miio.integrations.yeelight import Yeelight
@@ -72,7 +73,7 @@ class MiioYeelightHardware(Hardware):
             except socket.timeout:
                 break
             except Exception as ex:
-                self.core.log(f"error while reading discover results: {ex}")
+                self.core.log_exception("error while reading discover results", ex)
                 break
         s.close()
 
@@ -101,8 +102,13 @@ class MiioYeelightHardware(Hardware):
                     self.core.log(f"Yeelight {id} ip changed to {discovered[id]}")
 
                 if current['hardware'] == None:
-                    current['hardware'] = Yeelight(discovered[id], token)
-                    self.core.log(f"Created Yeelight {id}")
+                    try:
+                        current['hardware'] = Yeelight(discovered[id], token)
+                        self.core.log(f"Created Yeelight {id}")
+                    except Exception as exception:
+                        current['hardware'] = None
+                        self.core.log_exception('failed to create yeelight', exception)
+                        return False
     
             if current['hardware'] == None:
                 all_discovered = False
@@ -118,7 +124,32 @@ class MiioYeelightHardware(Hardware):
         
         self.discover_interval = 10 * 60 if all_discovered else 30
 
+    def _sync_action(self, hardware, action):
+        try:
+
+            result = False
+            if action == "enable":
+                result = hardware.on()
+            else:
+                result = hardware.off()
             
+            return (result != None) and (len(result) == 1) and (result[0] == 'ok')
+
+        except Exception as exception:
+            self.core.log_exception('_sync_action', exception)
+            return False
+
+    async def run_action(self, device_id, action):
+        device = self.get_device(device_id)
+        hardware = device['hardware']
+
+        if hardware == None:
+            self.core.log(f"Hardware {device_id} not ready for action {action}")
+            return False
+
+        return await self.loop.run_in_executor(self.executor, self._sync_action, hardware, action)
+
+        
     async def step(self):
         await super().step()
 
