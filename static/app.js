@@ -1,3 +1,6 @@
+var lastRefresh = new Date();
+let refreshInterval = 2500; //ms
+
 //
 // Helpers
 //
@@ -179,9 +182,18 @@ function handleListResponse(data) {
 
 function updateData() {
     console.log("Fetching data...");
+    lastRefresh = new Date();
     fetch('/api/device/list')
         .then(response => response.json())
         .then(data => handleListResponse(data));
+}
+
+function periodicUpdates() {
+
+    let now = new Date();
+    var ms = now - lastRefresh; //in ms
+    if (ms > refreshInterval) 
+        updateData();
 }
 
 //
@@ -229,4 +241,7 @@ elById("settings-button").addEventListener("click", () => {
 
 
 updateData();
+
+window.setInterval(periodicUpdates, 500);
+
 

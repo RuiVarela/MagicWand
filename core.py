@@ -166,17 +166,14 @@ class Core:
             if len(group_candidates) > 0:
                 group = group_candidates[0]
 
-            element = current.copy()
-            if 'cfg' in element:
-                element.pop('cfg')
-
-            if 'hardware' in element:
-                element.pop('hardware')
-
-            element['name'] = name    
-            element['group'] = group
-            element['dashboard'] = on_dashboard
-            
+            element = {
+                'id': current['id'],
+                'type': current['type'],
+                'name': name,
+                'group': group,
+                'state': current['state'],
+                'dashboard': on_dashboard
+            }
             records.append(element)
 
         records.sort(key=self._devices_sort_func)   
