@@ -84,6 +84,9 @@ class Core:
         if "TuyaCloudHardware" in self.configuration:
             self.hardware.append(hardware.TuyaCloudHardware(self))
 
+        if "TuyaLocalHardware" in self.configuration:
+            self.hardware.append(hardware.TuyaLocalHardware(self))
+
         if "MiioYeelightHardware" in self.configuration:
             self.hardware.append(hardware.MiioYeelightHardware(self))
 
