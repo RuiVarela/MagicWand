@@ -1,8 +1,6 @@
-from errno import ESTALE
-from pytz import NonExistentTimeError
+
 from hardware.base import Hardware
 from miio.integrations.yeelight import Yeelight
-from miio.miioprotocol import MiIOProtocol
 from miio.protocol import Message
 
 import datetime
