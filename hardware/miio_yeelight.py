@@ -65,7 +65,7 @@ class MiioYeelightHardware(Hardware):
                     id = binascii.hexlify(m.header.value.device_id).decode()
                     token = codecs.encode(m.checksum, "hex")
 
-                    self.core.log(f"Yeelight IP: {ip} ID: {id} token: {token}")
+                    #self.core.log(f"Yeelight IP: {ip} ID: {id} token: {token}")
                     seen_addrs.append(recv_addr[0])
 
                     devices[id] = ip

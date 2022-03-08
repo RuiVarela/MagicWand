@@ -1,5 +1,6 @@
 #
 # A Lot of code comes from tinytuya - https://github.com/jasonacox/tinytuya
+# A lot of code comes from localtuya - https://github.com/rospogrigio/localtuya
 #
 import asyncio
 import base64
@@ -7,6 +8,7 @@ import struct
 import json
 import binascii
 
+from hashlib import md5
 from Crypto.Cipher import AES 
 from collections import namedtuple
 
@@ -155,7 +157,6 @@ def bin2hex(x, pretty=False):
 
 def hex2bin(x):
     return bytes.fromhex(x)
-
 
 
 def pack_message(msg):
@@ -330,3 +331,70 @@ class BaseDevice:
             lg('Connection timeout!')
         finally:
             transport.close()
+
+
+#
+#
+#
+
+UDP_KEY = md5(b"yGAdlopoPVldABfn").digest()
+
+def pad(s):
+    return s + (16 - len(s) % 16) * chr(16 - len(s) % 16)
+
+def unpad(s):
+    return s[: -ord(s[len(s) - 1 :])]
+
+def encrypt(msg, key):
+    return AES.new(key, AES.MODE_ECB).encrypt(pad(msg).encode())
+
+def decrypt(msg, key):
+    return unpad(AES.new(key, AES.MODE_ECB).decrypt(msg)).decode()
+
+def decrypt_udp(message):
+    return decrypt(message, UDP_KEY)
+
+class TuyaDiscovery(asyncio.DatagramProtocol):
+    """Datagram handler listening for Tuya broadcast messages."""
+
+    def __init__(self, callback=None):
+        """Initialize a new BaseDiscovery."""
+        self.devices = {}
+        self._listeners = []
+        self._callback = callback
+
+    async def start(self, loop):
+        """Start discovery by listening to broadcasts."""
+        listener = loop.create_datagram_endpoint(
+            lambda: self, local_addr=("0.0.0.0", 6666)
+        )
+        encrypted_listener = loop.create_datagram_endpoint(
+            lambda: self, local_addr=("0.0.0.0", 6667)
+        )
+
+        self._listeners = await asyncio.gather(listener, encrypted_listener)
+
+    def close(self):
+        """Stop discovery."""
+        self._callback = None
+        for transport, _ in self._listeners:
+            transport.close()
+
+    def datagram_received(self, data, addr):
+        """Handle received broadcast message."""
+        data = data[20:-8]
+        try:
+            data = decrypt_udp(data)
+        except Exception:  # pylint: disable=broad-except
+            data = data.decode()
+
+        decoded = json.loads(data)
+        self.device_found(decoded)
+
+    def device_found(self, device):
+        """Discover a new device."""
+        if device.get("ip") not in self.devices:
+            self.devices[device.get("gwId")] = device
+
+        if self._callback:
+            self._callback(device)
