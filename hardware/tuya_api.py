@@ -7,6 +7,7 @@ import base64
 import struct
 import json
 import binascii
+import time
 
 from hashlib import md5
 from Crypto.Cipher import AES 
@@ -107,8 +108,7 @@ error_codes = {
     None: "Unknown Error",
 }
 
-
-def lg(message):
+def defaultLogger(message):
     print(message)
 
 
@@ -143,20 +143,6 @@ class AESCipher(object):
     @staticmethod
     def _unpad(s):
         return s[: -ord(s[len(s) - 1 :])]
-
-
-# Misc Helpers
-def bin2hex(x, pretty=False):
-    if pretty:
-        space = " "
-    else:
-        space = ""
-
-    result = "".join("%02X%s" % (y, space) for y in x)
-    return result
-
-def hex2bin(x):
-    return bytes.fromhex(x)
 
 
 def pack_message(msg):
@@ -195,7 +181,7 @@ def has_suffix(payload):
     if len(payload) < 4:
         return False
 
-    lg("buffer %r = %r", payload[-4:], SUFFIX_BIN)
+    #lg("buffer %r = %r", payload[-4:], SUFFIX_BIN)
     return payload[-4:] == SUFFIX_BIN
 
 def error_json(number=None, payload=None):
@@ -207,7 +193,7 @@ def error_json(number=None, payload=None):
         spayload = '""'
 
     vals = (error_codes[number], str(number), spayload)
-    lg("ERROR %s - %s - payload: %s" % vals)
+    #lg("ERROR %s - %s - payload: %s" % vals)
 
     return json.loads('{ "Error":"%s", "Err":"%s", "Payload":%s }' % vals)
 
@@ -271,7 +257,8 @@ payload_dict = {
 
 
 class NetworkCommand(asyncio.Protocol):
-    def __init__(self, payload, minresponse, getresponse, on_con_lost):
+    def __init__(self, logger, payload, minresponse, getresponse, on_con_lost):
+        self.logger = logger
         self.payload = payload
         self.minresponse = minresponse
         self.getresponse = getresponse
@@ -280,80 +267,286 @@ class NetworkCommand(asyncio.Protocol):
 
     def connection_made(self, transport):
         transport.write(self.payload)
-        lg('Data sent: {!r}'.format(self.payload))
+        #self.logger(f"Data sent: {self.payload}")
 
     def data_received(self, data):
         self.received = data
-        lg("Data Received data=%r", binascii.hexlify(self.received))
+        #self.logger(f"Data Received data={binascii.hexlify(self.received)}")
 
         # device may send null ack (28 byte) response before a full response
         if len(self.received) <= self.minresponse:
-            lg("received null payload (%r), fetch new one", self.received)
+            self.logger(f"received null payload {self.received}, fetch new one")
         else:
             self.on_con_lost.set_result(True)
 
-    def connection_lost(self, exc):
-        lg('The server closed the connection')
-        self.on_con_lost.set_result(True)
 
 
 class BaseDevice:
-    def __init__(self, dev_id, address, local_key="", dev_type="default"):
+    def __init__(self, dev_id, address, local_key=""):
+        self.logger = defaultLogger
         self.id = dev_id
         self.address = address
         self.local_key = local_key
         self.local_key = local_key.encode("latin1")
         self.connection_timeout = 5
-        self.version = 3.1
-        self.dev_type = dev_type
+        self.version = 3.3
+        self.dev_type = "default"
         self.port = 6668  # default - do not expect caller to pass in
         self.cipher = AESCipher(self.local_key)
         self.dps_to_request = {}
         self.seqno = 0
-        self.sendWait = 0.01
+        self.disabledetect = False
+
 
     async def _send_receive(self, payload, minresponse=28, getresponse=True):
-        success = False
-        retries = 0
         dev_type = self.dev_type
         data = None
 
         loop = asyncio.get_running_loop()
         on_done = loop.create_future()
         
-        message = 'Hello World!'
-        transport, protocol = await loop.create_connection(lambda: NetworkCommand(message, on_done), self.address, self.port)
+        factory = lambda: NetworkCommand(self.logger, payload, minresponse, getresponse, on_done)
+        transport, protocol = await loop.create_connection(factory, self.address, self.port)
+        data = None
 
         # Wait until the protocol signals that the connection is lost and close the transport.
         try:
             await asyncio.wait_for(on_done, timeout=self.connection_timeout)
+            data = protocol.received
         except asyncio.TimeoutError:
-            lg('Connection timeout!')
+            self.logger('Connection timeout!')
         finally:
             transport.close()
 
 
+         # Unpack Message into TuyaMessage format
+        # and return payload decrypted
+        try:
+            msg = unpack_message(data)
+            # Data available: seqno cmd retcode payload crc
+            #self.logger(f"raw unpacked message = {msg}")
+            result = self._decode_payload(msg.payload)
+        except:
+            self.logger("error unpacking or decoding tuya JSON payload")
+            result = error_json(ERR_PAYLOAD)
+
+        # Did we detect a device22 device? Return ERR_DEVTYPE error.
+        if dev_type != self.dev_type:
+            self.log.debug("Device22 detected and updated ({dev_type} -> {self.dev_type}) - Update payload and try again")
+            result = error_json(ERR_DEVTYPE)
+
+        return result
+
+    def _decode_payload(self, payload):
+        cipher = AESCipher(self.local_key)
+
+        if payload.startswith(PROTOCOL_VERSION_BYTES_31):
+            # Received an encrypted payload
+            # Remove version header
+            payload = payload[len(PROTOCOL_VERSION_BYTES_31) :]
+            # Decrypt payload
+            # Remove 16-bytes of MD5 hexdigest of payload
+            payload = cipher.decrypt(payload[16:])
+        elif self.version == 3.3:
+            # Trim header for non-default device type
+            if self.dev_type != "default" or payload.startswith(PROTOCOL_VERSION_BYTES_33):
+                payload = payload[len(PROTOCOL_33_HEADER) :]
+                self.logger(f"removing 3.3={payload}")
+            try:
+                #self.logger(f"decrypting={payload}")
+                payload = cipher.decrypt(payload, False)
+            except:
+                self.logger(f"incomplete payload={payload}")
+                return None
+
+            #self.logger(f"decrypted 3.3 payload={payload} type {type(payload)}")
+            if not isinstance(payload, str):
+                try:
+                    payload = payload.decode()
+                except:
+                   self.logger("payload was not string type and decoding failed")
+                   return error_json(ERR_JSON, payload)
+            if not self.disabledetect and "data unvalid" in payload:
+                self.dev_type = "device22"
+                # set at least one DPS
+                self.dps_to_request = {"1": None}
+                self.logger(f"'data unvalid' error detected: switching to dev_type {self.dev_type}")
+                return None
+        elif not payload.startswith(b"{"):
+            self.logger("Unexpected payload=%r", payload)
+            return error_json(ERR_PAYLOAD, payload)
+
+        if not isinstance(payload, str):
+            payload = payload.decode()
+            self.logger(f"decoded results={payload}")
+        try:
+            json_payload = json.loads(payload)
+        except:
+            json_payload = error_json(ERR_JSON, payload)
+        return json_payload
+
+    def generate_payload(self, command, data=None, gwId=None, devId=None, uid=None):
+        """
+        Generate the payload to send.
+        Args:
+            command(str): The type of command.
+                This is one of the entries from payload_dict
+            data(dict, optional): The data to send.
+                This is what will be passed via the 'dps' entry
+            gwId(str, optional): Will be used for gwId
+            devId(str, optional): Will be used for devId
+            uid(str, optional): Will be used for uid
+        """
+        json_data = payload_dict[self.dev_type][command]["command"]
+        command_hb = payload_dict[self.dev_type][command]["hexByte"]
+
+        if "gwId" in json_data:
+            if gwId is not None:
+                json_data["gwId"] = gwId
+            else:
+                json_data["gwId"] = self.id
+        if "devId" in json_data:
+            if devId is not None:
+                json_data["devId"] = devId
+            else:
+                json_data["devId"] = self.id
+        if "uid" in json_data:
+            if uid is not None:
+                json_data["uid"] = uid
+            else:
+                json_data["uid"] = self.id
+        if "t" in json_data:
+            json_data["t"] = str(int(time.time()))
+
+        if data is not None:
+            if "dpId" in json_data:
+                json_data["dpId"] = data
+            else:
+                json_data["dps"] = data
+        if command_hb == "0d":  # CONTROL_NEW
+            json_data["dps"] = self.dps_to_request
+
+        # Create byte buffer from hex data
+        payload = json.dumps(json_data)
+        # if spaces are not removed device does not respond!
+        payload = payload.replace(" ", "")
+        payload = payload.encode("utf-8")
+        #self.logger(f"building payload={payload}")
+
+        if self.version == 3.3:
+            # expect to connect and then disconnect to set new
+            self.cipher = AESCipher(self.local_key)
+            payload = self.cipher.encrypt(payload, False)
+            self.cipher = None
+            if command_hb != "0a" and command_hb != "12":
+                # add the 3.3 header
+                payload = PROTOCOL_33_HEADER + payload
+        elif command == CONTROL:
+            # need to encrypt
+            self.cipher = AESCipher(self.local_key)
+            payload = self.cipher.encrypt(payload)
+            preMd5String = (
+                b"data="
+                + payload
+                + b"||lpv="
+                + PROTOCOL_VERSION_BYTES_31
+                + b"||"
+                + self.local_key
+            )
+            m = md5()
+            m.update(preMd5String)
+            hexdigest = m.hexdigest()
+            # some tuya libraries strip 8: to :24
+            payload = (
+                PROTOCOL_VERSION_BYTES_31
+                + hexdigest[8:][:16].encode("latin1")
+                + payload
+            )
+            self.cipher = None
+
+        # create Tuya message packet
+        msg = TuyaMessage(self.seqno, int(command_hb, 16), 0, payload, 0)
+        self.seqno += 1  # increase message sequence number
+        buffer = pack_message(msg)
+        #self.logger(f"payload generated={binascii.hexlify(buffer)}")
+        return buffer
+
+    async def status(self):
+        """Return device status."""
+        payload = self.generate_payload(DP_QUERY)
+
+        data = await self._send_receive(payload)
+        self.logger(f"status() received data={data}")
+        # Error handling
+        if data and "Err" in data:
+            if data["Err"] == str(ERR_DEVTYPE):
+                # Device22 detected and change - resend with new payload
+                self.logger(f"status() rebuilding payload for device22")
+                payload = self.generate_payload(DP_QUERY)
+                data = await self._send_receive(payload)
+
+        return data
+
+    async def set_status(self, on, switch=1):
+        """
+        Set status of the device to 'on' or 'off'.
+        Args:
+            on(bool):  True for 'on', False for 'off'.
+            switch(int): The switch to set
+        """
+        # open device, send request, then close connection
+        if isinstance(switch, int):
+            switch = str(switch)  # index and payload is a string
+        payload = self.generate_payload(CONTROL, {switch: on})
+
+        data = await self._send_receive(payload)
+        self.logger(f"set_status received data=={data}")
+
+        return data
+
+    async def updatedps(self, index=[1]):
+        """
+        Request device to update index.
+        Args:
+            index(array): list of dps to update (ex. [4, 5, 6, 18, 19, 20])
+        """
+        self.logger(f"updatedps() entry (dev_type is {self.dev_type})")
+        # open device, send request, then close connection
+        payload = self.generate_payload(UPDATEDPS, index)
+        data = await self._send_receive(payload, 0)
+        self.logger(f"updatedps received data={data}")
+        return data
+
+    async def set_value(self, index, value):
+        """
+        Set int value of any index.
+        Args:
+            index(int): index to set
+            value(int): new value for the index
+        """
+        # open device, send request, then close connection
+        if isinstance(index, int):
+            index = str(index)  # index and payload is a string
+
+        payload = self.generate_payload(CONTROL, {index: value})
+
+        data = await self._send_receive(payload)
+
+        return data
+
+    async def turn_on(self, switch=1):
+        """Turn the device on"""
+        await self.set_status(True, switch)
+
+    async def turn_off(self, switch=1):
+        """Turn the device off"""
+        await self.set_status(False, switch)
+
+
+
 #
+# Device Discovery
 #
-#
-
-UDP_KEY = md5(b"yGAdlopoPVldABfn").digest()
-
-def pad(s):
-    return s + (16 - len(s) % 16) * chr(16 - len(s) % 16)
-
-def unpad(s):
-    return s[: -ord(s[len(s) - 1 :])]
-
-def encrypt(msg, key):
-    return AES.new(key, AES.MODE_ECB).encrypt(pad(msg).encode())
-
-def decrypt(msg, key):
-    return unpad(AES.new(key, AES.MODE_ECB).decrypt(msg)).decode()
-
-def decrypt_udp(message):
-    return decrypt(message, UDP_KEY)
-
 class TuyaDiscovery(asyncio.DatagramProtocol):
     """Datagram handler listening for Tuya broadcast messages."""
 
@@ -362,6 +555,9 @@ class TuyaDiscovery(asyncio.DatagramProtocol):
         self.devices = {}
         self._listeners = []
         self._callback = callback
+
+        UDP_KEY = md5(b"yGAdlopoPVldABfn").digest()
+        self._cipher = AESCipher(UDP_KEY)
 
     async def start(self, loop):
         """Start discovery by listening to broadcasts."""
@@ -384,7 +580,7 @@ class TuyaDiscovery(asyncio.DatagramProtocol):
         """Handle received broadcast message."""
         data = data[20:-8]
         try:
-            data = decrypt_udp(data)
+            data = self._cipher.decrypt(data, False)
         except Exception:  # pylint: disable=broad-except
             data = data.decode()
 

@@ -1,7 +1,9 @@
 
 from hardware.base import Hardware
 from hardware.tuya_api import TuyaDiscovery
+from hardware.tuya_api import BaseDevice
 
+import asyncio
 
 class TuyaLocalHardware(Hardware):
     def __init__(self, core):
@@ -19,10 +21,33 @@ class TuyaLocalHardware(Hardware):
     async def step(self):
         await super().step()
 
-        discovered = self.discover.devices
-        for key in discovered:
-            element = discovered[key]
-            matching = [i for i in self.get_devices() if i['cfg']["id"] == key]
+        device = BaseDevice("bf77a8fa3ba8440af8kiwx", "192.168.68.30", "7d166a102f0f071c")
+        #device = BaseDevice("bfc5f68297929eef7cb863", "192.168.68.27", "1e4b5abdd835c096")
+        
+        # ceiling lights
+        device = BaseDevice("bfaa3aa6bcbda3ed6allx2", "192.168.68.14", "6fbaebfec57c5b8c")
 
+        
+        result = await device.status()
+        result = await device.turn_off(2)
 
-        self.core.log(discovered)
+        await asyncio.sleep(5)
+        print("asd")
+
+        # discovered = self.discover.devices
+        # for key in discovered:
+        #     existing_cfg = [i for i in self.configuration['devices'] if i["id"] == key]
+        #     if len(existing_cfg) == 0:
+        #         continue
+
+        #     existing_cfg = existing_cfg[0]
+
+        #     element = discovered[key]
+        #     existing_matching = [i for i in self.get_devices() if i['cfg']["id"] == key]
+
+        #     if len(existing_matching) == 0:
+        #         device = BaseDevice(key, element['ip'], existing_cfg['token'])
+        #         result = await device.product()
+        #         print("asd") 
+
+        #self.core.log(discovered)
