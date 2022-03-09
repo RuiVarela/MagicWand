@@ -76,8 +76,9 @@
         "refresh_batch": 5,
 
         "devices": [
-            { "name": "Master Bedroom Ceiling Light", "id": "1545", "token": "kkkkkkkk", "type": "switch" },
-            { "name": "Living Ceiling Light", "id": "1545", "token": "kkkkkkkk", "type": "switch.2" }
+            { "name": "Master Bedroom Ceiling Light",   "id": "1234", "token": "kkkkkkkk", "type": "switch" },
+            { "name": "Living 2 Light switch",          "id": "5678", "token": "kkkkkkkk", "type": "switch.2" },
+            { "name": "Master Bedroom Rui Light",       "id": "9101", "token": "kkkkkkkk", "type": "light", "dp": 20 }
         ]  
     },
 

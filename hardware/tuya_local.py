@@ -147,20 +147,21 @@ class TuyaLocalHardware(Hardware):
                     self.core.log(f"Updated [{device['name']}] ip: {ip}")
 
         # get the device status
-        counter = 0
-        while counter < self.status_batch:
+        end = self.status_iterator + self.status_batch
+        while self.status_iterator < end:
             index = self.status_iterator % device_count
             device = devices[index]
+            self.status_iterator = self.status_iterator + 1
 
             if self.elapsed(device['last_status'], self.refresh_interval):
                 hardware = device['hardware']
-                if hardware.address != "":
+                if hardware.address != "" and device['type'] != "curtain":
                     #self.core.log(f"{index} Refreshing device [{device['name']}] status")
                     result = await hardware.status()
-                    self.apply_status(device['cfg']['id'], result)
-                    counter = counter + 1
-
-            self.status_iterator = self.status_iterator + 1
+                    if 'error' in result:
+                        self.core.log(f"Failed to call status [{device['name']}] : {result}")
+                    else:
+                        self.apply_status(device['cfg']['id'], result)
 
         if self.status_iterator > 1000:
             self.status_iterator = 0
