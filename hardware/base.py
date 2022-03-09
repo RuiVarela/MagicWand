@@ -12,12 +12,11 @@ class Hardware:
         self.configuration = None
         self.loop = None
         self.devices = []
-        pass
 
     def elapsed(self, ts, seconds):
         if ts == None:
             return True
-        delta = round((datetime.datetime.now() - ts).total_seconds())
+        delta = (datetime.datetime.now() - ts).total_seconds()
         return delta > seconds
 
     def get_device(self, device_id):

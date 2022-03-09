@@ -1,5 +1,5 @@
 var lastRefresh = new Date();
-let refreshInterval = 2500; //ms
+let refreshInterval = 500; //ms
 
 //
 // Helpers
@@ -242,6 +242,6 @@ elById("settings-button").addEventListener("click", () => {
 
 updateData();
 
-window.setInterval(periodicUpdates, 500);
+window.setInterval(periodicUpdates, 100);
 
 

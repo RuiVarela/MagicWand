@@ -72,8 +72,12 @@
     },
     
     "TuyaLocalHardware": {
+        "refresh_interval": 2.3,
+        "refresh_batch": 5,
+
         "devices": [
-            { "name": "Master Bedroom Ceiling Light", "id": "1545", "token": "kkkkkkkk" }
+            { "name": "Master Bedroom Ceiling Light", "id": "1545", "token": "kkkkkkkk", "type": "switch" },
+            { "name": "Living Ceiling Light", "id": "1545", "token": "kkkkkkkk", "type": "switch.2" }
         ]  
     },
 
