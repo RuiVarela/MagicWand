@@ -132,7 +132,7 @@ def error_json(message, payload=None):
         # spayload = payload.replace('\"','').replace('\'','')
     except:
         spayload = '""'
-    return json.loads('{ "Error":"%s", "Payload":%s }' % (message, spayload))
+    return json.loads('{ "error":"%s", "payload":%s }' % (message, spayload))
 
 
 class NetworkCommand(asyncio.Protocol):
@@ -192,7 +192,8 @@ class Device:
         self.id = dev_id
         self.address = address
         self.local_key = local_key.encode("latin1")
-        self.connection_timeout = 5
+        self.connection_timeout = 1
+        self.connection_attempts = 2
         self.version = 3.3
         self.dev_type = "type_0a"
         self.port = 6668  # default - do not expect caller to pass in
@@ -202,31 +203,44 @@ class Device:
 
     async def _send_receive(self, payload):
         loop = asyncio.get_running_loop()
-        on_done = loop.create_future()
-        factory = lambda: NetworkCommand(self.logger, payload, on_done) 
         received_payload = None
         transport = None
-
-        try:
-            connection_coroutine = loop.create_connection(factory, self.address, self.port)
-            transport, protocol = await asyncio.wait_for(connection_coroutine, timeout=self.connection_timeout)
-
-            await asyncio.wait_for(on_done, timeout=self.connection_timeout)
-            received_payload = protocol.received_payload
-        except asyncio.TimeoutError:
-            self.logger('Commands timeout!')
-        finally:
+        
+        attempts = self.connection_attempts
+        while attempts > 0:
             try:
-                if not transport.is_closing():
-                    transport.close()
-            except:
-                pass
+                on_done = loop.create_future()
+                factory = lambda: NetworkCommand(self.logger, payload, on_done) 
+                connection_coroutine = loop.create_connection(factory, self.address, self.port)
+                transport, protocol = await asyncio.wait_for(connection_coroutine, timeout=self.connection_timeout)
 
-        try:
-            result = self._decode_payload(received_payload)
-        except:
-            self.logger("error unpacking or decoding tuya JSON payload")
-            result = error_json("invalid payload")
+                await asyncio.wait_for(on_done, timeout=self.connection_timeout)
+                received_payload = protocol.received_payload.payload
+                break
+                
+            except Exception as e:
+                attempts = attempts - 1
+            finally:
+
+                try:
+                    connection_coroutine.close()
+                except:
+                    pass
+                
+                try:
+                    if not transport.is_closing():
+                        transport.close()
+                except:
+                    pass
+        
+        if received_payload is None:
+            result = error_json("empty payload")
+        else:
+            try:
+                result = self._decode_payload(received_payload)
+            except Exception as e:
+                self.logger("error unpacking or decoding tuya JSON payload")
+                result = error_json("invalid payload")
 
         return result
 
@@ -255,7 +269,7 @@ class Device:
         if not isinstance(payload, str):
             payload = payload.decode()
 
-        self.debug("Decrypted payload: %s", payload)
+        #self.logger(f"Decrypted payload: {payload}")
 
         return json.loads(payload)
 
@@ -282,7 +296,7 @@ class Device:
             json_data["dps"] = self.dps_to_request
 
         payload = json.dumps(json_data).replace(" ", "").encode("utf-8")
-        self.logger(f"Send payload: {payload}")
+        #self.logger(f"Send payload: {payload}")
 
         if self.version == 3.3:
             payload = self.cipher.encrypt(payload, False)
@@ -331,19 +345,18 @@ class Device:
         return await self._send_receive(payload)
 
     async def turn_on(self, switch=1):
-        await self.set_status(True, switch)
+        return await self.set_status(True, switch)
 
     async def turn_off(self, switch=1):
-        await self.set_status(False, switch)
+        return await self.set_status(False, switch)
 
 #
 # Device Discovery
 #
 class TuyaDiscovery(asyncio.DatagramProtocol):
-    def __init__(self, callback=None):
+    def __init__(self):
         self.devices = {}
         self._listeners = []
-        self._callback = callback
 
         UDP_KEY = md5(b"yGAdlopoPVldABfn").digest()
         self._cipher = AESCipher(UDP_KEY)
@@ -366,12 +379,7 @@ class TuyaDiscovery(asyncio.DatagramProtocol):
         except Exception:  # pylint: disable=broad-except
             data = data.decode()
 
-        decoded = json.loads(data)
-        self.device_found(decoded)
+        device = json.loads(data)
+        self.devices[device.get("gwId")] = device
 
-    def device_found(self, device):
-        if device.get("ip") not in self.devices:
-            self.devices[device.get("gwId")] = device
-
-        if self._callback:
-            self._callback(device)
+        

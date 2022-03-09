@@ -15,7 +15,6 @@ class TuyaLocalHardware(Hardware):
         self.status_iterator = 0
         self.status_batch = 5
 
-        self.last_refresh = None
         self.refresh_interval = 1.0
 
     async def start(self, configuration):
@@ -36,13 +35,21 @@ class TuyaLocalHardware(Hardware):
             device_count = int(device_count[0]) if len(device_count) > 0 else 1
             type = type.rstrip('0123456789.')
 
+            base_dp = 1
+            if 'dp' in current:
+                base_dp = current['dp']
+
             for i in range(device_count):
                 id_counter = id_counter + 1
                 name = current["name"]
-                dp = i + 1
 
+                dp = base_dp + i
+                
                 if device_count > 1:
                     name = f"{name} {dp}"
+
+                hardware = Device(current['id'], "", current['token'])
+                hardware.logger = self.core.log
 
                 device = {
                     'id': self.hardware_type() + "_" + str(id_counter),
@@ -50,7 +57,8 @@ class TuyaLocalHardware(Hardware):
                     'type': type,
                     'state': 'off',
 
-                    'hardware': Device(current['id'], "", current['token']), 
+                    'last_status': None,
+                    'hardware': hardware, 
                     'dp': dp,
                     'cfg': current
                 }
@@ -75,19 +83,49 @@ class TuyaLocalHardware(Hardware):
         
         dp = device["dp"]
         type = device["type"]
+        if type == "curtain":
+            if (action == 'enable') or (action == 'open'):
+                action = "on"
+            elif (action == 'disable') or (action == 'close'):
+                action = "off"
+        else:
+            action = (action == 'enable') or (action == 'open')
+        
+        result = await hardware.set_status(action, dp)       
 
-        result = None
-        if type == "light" or type == "switch":
-            if action == "enable":
-                result = await device.turn_on(dp)
-            else:
-                result = await device.turn_off(dp)
+        if result is not None and 'error' not in result:
+            return True
 
-        self.core.log(f"Action done: {result}")
+        self.core.log(f"Action Error: {result}")
         return False    
 
-    def apply_status(self, device, status):
-        self.core.log(f"Status {device['name']} : {status}");
+    def apply_status(self, hardware_id, status):
+        # self.core.log(f"Status {device['name']} : {status}");
+        for device in self.get_devices():
+            if device['cfg']['id'] != hardware_id:
+                continue
+            
+            device['last_status'] = datetime.datetime.now()
+
+            dp = str(device["dp"])
+            ok = False
+
+            if 'dps' in status and dp in status['dps']:
+                value = "on" if status['dps'][dp] else "off"
+
+                if device['type'] == "curtain":
+                    value = "off"
+
+                if device['state'] != value:
+                    device['state'] = value
+                    self.core.log("Updated [" +  device['name'] + "] value: " + device['state'])
+
+                ok = True
+
+            #self.core.log(f"updated [{device['name']}] status!")
+
+            if not ok:
+                self.core.log(f"Failed to apply status [{device['name']}]\n{status}")
 
     async def step(self):
         await super().step()
@@ -103,28 +141,26 @@ class TuyaLocalHardware(Hardware):
                 if device['cfg']['id'] != key:
                     continue
 
-                ip = key["ip"]
+                ip = self.discover.devices[key]['ip']
                 if device['hardware'].address != ip:
                     device['hardware'].address = ip
-                    self.core.log(f"Updating device {device['name']} with ip {ip}")
+                    self.core.log(f"Updated [{device['name']}] ip: {ip}")
 
         # get the device status
-        if self.elapsed(self.last_refresh, self.refresh_interval):
+        counter = 0
+        while counter < self.status_batch:
+            index = self.status_iterator % device_count
+            device = devices[index]
 
-            for i in range(self.status_batch):
-                index = (self.status_iterator + i) % device_count
-                device = devices[index]
+            if self.elapsed(device['last_status'], self.refresh_interval):
                 hardware = device['hardware']
                 if hardware.address != "":
+                    #self.core.log(f"{index} Refreshing device [{device['name']}] status")
                     result = await hardware.status()
-                    self.apply_status(device, result)
-                    
-            self.status_iterator += self.status_batch
-            if self.status_iterator > 1000:
-                self.status_iterator = 0
-            
-            self.last_refresh = datetime.datetime.now()
+                    self.apply_status(device['cfg']['id'], result)
+                    counter = counter + 1
 
+            self.status_iterator = self.status_iterator + 1
 
-
- 
+        if self.status_iterator > 1000:
+            self.status_iterator = 0
