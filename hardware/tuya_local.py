@@ -96,7 +96,8 @@ class TuyaLocalHardware(Hardware):
         if result is not None and 'error' not in result:
             return True
 
-        self.core.log(f"Action Error: {result}")
+        self.core.log(f"Action Error [{device['name']}] {result}")
+
         return False    
 
     def apply_status(self, hardware_id, status):

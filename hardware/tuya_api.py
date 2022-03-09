@@ -192,8 +192,8 @@ class Device:
         self.id = dev_id
         self.address = address
         self.local_key = local_key.encode("latin1")
-        self.connection_timeout = 1
-        self.connection_attempts = 2
+        self.connection_timeout = 4
+        self.connection_attempts = 3
         self.version = 3.3
         self.dev_type = "type_0a"
         self.port = 6668  # default - do not expect caller to pass in
