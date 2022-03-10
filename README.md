@@ -1,7 +1,7 @@
 # MagicWand
 MagicWand is a super lightweight home controller
 
-![MagicWand](https://github.com/RuiVarela/MagicWand/raw/master/readme00.gif)   
+![MagicWand](https://github.com/RuiVarela/MagicWand/raw/main/readme00.gif)   
 
 It was developed to run on a raspberry pi zero. A zero is more than capable to control your home devices. Homeassistant is an amazing sofware but it is just too heavy.   
 
