@@ -139,15 +139,19 @@ class MultiDeviceHardware(Hardware):
 
         
     async def run_action(self, device_id, action):
-        self.core.log(f"{type(self).__name__} run_action device_id={device_id} action={action}")
+        device = self.get_device(device_id)
+
+        self.core.log(f"Multi [{device['name']}] start {action}")
         
-        children = self.get_device(device_id)['cfg']['children']
+        children = device['cfg']['children']
         for current in children:
             device = self.core.get_device_by_name(current)
             if device:
                 await self.core.run_device_action(device['id'], action)
             else:
                 self.core.log("Unknown children name: " + current)
+
+        self.core.log(f"Multi [{device['name']}] end")
 
         return True
 
@@ -184,9 +188,10 @@ class ButtonHardware(Hardware):
         
 
     async def run_action(self, device_id, action):
-        self.core.log(f"{type(self).__name__} run_action device_id={device_id} action={action}")
+        device = self.get_device(device_id)
+        self.core.log(f"Button [{device['name']}] start {action}")
         
-        actions = self.get_device(device_id)['cfg']['actions']
+        actions = device['cfg']['actions']
         for current in actions:
             device_name = current['device']
             device_action = current['action']
@@ -195,4 +200,7 @@ class ButtonHardware(Hardware):
                 await self.core.run_device_action(device['id'], device_action)
             else:
                 self.core.log("Unknown device_name " + device_name + " device_action " + device_action)
+
+        self.core.log(f"Button [{device['name']}] end")
+
         return True

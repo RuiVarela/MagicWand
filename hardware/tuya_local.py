@@ -75,6 +75,9 @@ class TuyaLocalHardware(Hardware):
 
     async def run_action(self, device_id, action):
         device = self.get_device(device_id)
+
+        self.core.log(f"Tuya [{device['name']}] start {action}")
+
         hardware = device['hardware']
 
         if hardware.address == "":
@@ -91,7 +94,9 @@ class TuyaLocalHardware(Hardware):
         else:
             action = (action == 'enable') or (action == 'open')
         
-        result = await hardware.set_status(action, dp)       
+        result = await hardware.set_status(action, dp)     
+
+        self.core.log(f"Tuya [{device['name']}] end")  
 
         if result is not None and 'error' not in result:
             return True
@@ -119,7 +124,7 @@ class TuyaLocalHardware(Hardware):
 
                 if device['state'] != value:
                     device['state'] = value
-                    self.core.log("Updated [" +  device['name'] + "] value: " + device['state'])
+                    self.core.log("Tuya [" +  device['name'] + "] value: " + device['state'])
 
                 ok = True
 
@@ -145,7 +150,7 @@ class TuyaLocalHardware(Hardware):
                 ip = self.discover.devices[key]['ip']
                 if device['hardware'].address != ip:
                     device['hardware'].address = ip
-                    self.core.log(f"Updated [{device['name']}] ip: {ip}")
+                    self.core.log(f"Tuya [{device['name']}] ip: {ip}")
 
         # get the device status
         end = self.status_iterator + self.status_batch

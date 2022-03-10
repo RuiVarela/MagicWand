@@ -103,7 +103,7 @@ class MiioYeelightHardware(Hardware):
                 if current['hardware'] == None:
                     try:
                         current['hardware'] = Yeelight(discovered[id], token)
-                        self.core.log(f"Created Yeelight {id}")
+                        self.core.log(f"Yeelight {id} created ip: {discovered[id]}")
                     except Exception as exception:
                         current['hardware'] = None
                         self.core.log_exception('failed to create yeelight', exception)
@@ -119,7 +119,7 @@ class MiioYeelightHardware(Hardware):
                 value = "on" if status.is_on else "off"
                 if current['state'] != value:
                     current['state'] = value
-                    self.core.log("Updated [" +  current['name'] + "] value: " + current['state'])
+                    self.core.log("Yeelight [" +  current['name'] + "] value: " + current['state'])
 
             except Exception as exception:
                 self.core.log_exception('failed to create yeelight', exception)
@@ -145,13 +145,19 @@ class MiioYeelightHardware(Hardware):
 
     async def run_action(self, device_id, action):
         device = self.get_device(device_id)
+        self.core.log(f"Yeelight [{device['name']}] start {action}")
+
         hardware = device['hardware']
 
         if hardware == None:
             self.core.log(f"Hardware {device_id} not ready for action {action}")
             return False
+        
+        result = await self.loop.run_in_executor(self.executor, self._sync_action, hardware, action)
 
-        return await self.loop.run_in_executor(self.executor, self._sync_action, hardware, action)
+        self.core.log(f"Yeelight [{device['name']}] end")
+
+        return result
 
         
     async def step(self):
