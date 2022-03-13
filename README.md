@@ -83,7 +83,8 @@ sudo setcap 'cap_net_bind_service=+ep' /usr/bin/python3.9
 - http://localhost:8080/api/maintenance/status
 - http://localhost:8080/api/maintenance/shutdown
 - http://localhost:8080/api/maintenance/restart
-- http://localhost:8080/api/maintenance/logs
+- http://localhost:8080/api/maintenance/log
+- http://localhost:8080/api/maintenance/clear_log
 - http://localhost:8080/api/device/list
 - http://localhost:8080/api/device/CommandHardware_1/enable
 - http://localhost:8080/api/device/CommandHardware_1/disable

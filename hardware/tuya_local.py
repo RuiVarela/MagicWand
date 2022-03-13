@@ -1,9 +1,9 @@
 
-import datetime
 from hardware.base import Hardware
-from hardware.tuya_api import TuyaDiscovery
-from hardware.tuya_api import Device
+from hardware.tuya_local_api import TuyaDiscovery
+from hardware.tuya_local_api import Device
 
+import datetime
 import asyncio
 import re
 

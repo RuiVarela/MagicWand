@@ -12,7 +12,7 @@ class Core:
         self.configuration = None
         self.restart = False
         self.running = True
-        self.version = "0.1.1"
+        self.version = "1.0.1"
 
         self.groups = []
         self.name_mapper = {}
@@ -21,7 +21,11 @@ class Core:
         self.http_server = None
         self.log_history_size = 100 * 1024
         self.log_history = []
-        
+
+    def clear_log(self):
+        self.log_history = []
+        self.log("log cleared")
+
     def log(self, message):
         now = datetime.now()
         timestamp = now.isoformat(sep=' ', timespec='milliseconds')
