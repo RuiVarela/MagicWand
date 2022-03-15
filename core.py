@@ -3,6 +3,9 @@ import traceback
 import pathlib
 import hardware 
 import json
+import asyncio
+from zconf import ZListener, ZBrowser
+from aiozeroconf import Zeroconf
 from datetime import datetime
 from http_server import HttpServer
 
@@ -16,11 +19,29 @@ class Core:
 
         self.groups = []
         self.name_mapper = {}
+        self.mdns = {}
         self.dashboard_devices = []
         self.hardware = []
         self.http_server = None
         self.log_history_size = 100 * 1024
         self.log_history = []
+
+
+    def add_mdns(self, name, server, ip, port):
+        self.log(f"mDNS {name} added @ {server} {ip}:{port}")
+        element = {
+            'name': name,
+            'server': server,
+            'ip': ip,
+            'port': port
+        }
+        self.mdns[name] = element
+
+    def remove_mdns(self, name):
+        self.log(f"mDNS {name} removed")
+        if name in self.mdns:
+            self.mdns.pop(name)
+
 
     def clear_log(self):
         self.log_history = []
@@ -40,6 +61,7 @@ class Core:
         data = tag + "\n" + "".join(traceback.format_exception(type(exception), exception, exception.__traceback__))
         self.log(data)
 
+
     def _handle_task_result(self, task):
         exception = task.exception()
         if exception:
@@ -49,6 +71,7 @@ class Core:
         task = asyncio.create_task(coroutine)
         task.add_done_callback(self._handle_task_result)
         return task
+
 
     async def pump(self):
         self.log("Core setting up...")
@@ -115,11 +138,27 @@ class Core:
             hardware_tasks.append(hardware_task)
             all_tasks.append(hardware_task)
 
+        #
+        # Zero Conf
+        #
+        zeroconf = Zeroconf(loop)
+        zeroconf_listener = ZListener(self)
+        zeroconf_browsers = [
+            ZBrowser(zeroconf, "_adb._tcp.local.", zeroconf_listener),
+            #ZBrowser(zeroconf, "_googlecast._tcp.local.", zeroconf_listener),
+            ZBrowser(zeroconf, "_androidtvremote2._tcp.local.", zeroconf_listener),
+        ]
+
         while self.running:
-            # self.log("Core running ok")
             await asyncio.sleep(1)
+            #los = await ZeroconfServiceTypes.find(zeroconf,timeout=0.5)
+            #print ("Found {}".format(los))
 
         self.log("Core Shutting down")
+
+        for current in zeroconf_browsers:
+            current.cancel()
+        await zeroconf.close()
 
         await asyncio.gather(*all_tasks)
         self.log("Core shutdown completed")

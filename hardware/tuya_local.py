@@ -70,7 +70,7 @@ class TuyaLocalHardware(Hardware):
         self.devices = devices
 
     async def stop(self):
-        await self.discover.stop()
+        self.discover.close()
         await super().stop()
 
     async def run_action(self, device_id, action):

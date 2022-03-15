@@ -13,7 +13,6 @@ import binascii
 class MiioYeelightHardware(Hardware):
     def __init__(self, core):
         super().__init__(core)
-        self.discover_count = 0
 
         self.last_refresh = None
         self.refresh_interval = 5
@@ -83,10 +82,7 @@ class MiioYeelightHardware(Hardware):
 
         if self.elapsed(self.last_discover, self.discover_interval):
             discovered = self._sync_discover()
-            if self.discover_count == 0:
-                self.core.log(f"Yeelight Discovered {discovered}")
-
-            self.discover_count = self.discover_count + 1
+            #self.core.log(f"Yeelight Discovered {discovered}")
             self.last_discover = datetime.datetime.now()
 
         all_discovered = True
@@ -106,7 +102,8 @@ class MiioYeelightHardware(Hardware):
                         self.core.log(f"Yeelight {id} created ip: {discovered[id]}")
                     except Exception as exception:
                         current['hardware'] = None
-                        self.core.log_exception('failed to create yeelight', exception)
+                        self.core.log(f"Failed to create Yeelight {id} on ip: {discovered[id]}")
+                        #self.core.log_exception('failed to create yeelight', exception)
                         return False
     
             if current['hardware'] == None:
