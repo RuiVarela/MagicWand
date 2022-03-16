@@ -6,6 +6,7 @@ from hardware.command import CommandHardware
 from hardware.tuya_cloud import TuyaCloudHardware
 from hardware.tuya_local import TuyaLocalHardware
 from hardware.miio_yeelight import MiioYeelightHardware
+from hardware.android import AndroidHardware
 
 #
 # Run hardware Task

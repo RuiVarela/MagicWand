@@ -130,3 +130,5 @@ dmypy.json
 project_venv
 configuration.json
 .DS_Store
+android.adbkey
+android.adbkey.pub

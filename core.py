@@ -41,6 +41,11 @@ class Core:
         self.log(f"mDNS {name} removed")
         if name in self.mdns:
             self.mdns.pop(name)
+    
+    def get_mdns(self, name):
+        if name in self.mdns:
+            return self.mdns[name]
+        return None
 
 
     def clear_log(self):
@@ -116,6 +121,9 @@ class Core:
 
         if "MiioYeelightHardware" in self.configuration:
             self.hardware.append(hardware.MiioYeelightHardware(self))
+
+        if "AndroidHardware" in self.configuration:
+            self.hardware.append(hardware.AndroidHardware(self))
 
         all_tasks = []
 
