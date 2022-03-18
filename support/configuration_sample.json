@@ -64,6 +64,24 @@
             }
         ]
     },
+    
+    "AndroidHardware": {
+        "tvs": [
+            {   "mdns": "SHIELD._androidtvremote2._tcp.local.", 
+                "name": "Living Room Shield",
+                "buttons": [
+                    { "name": "not shared", "command": "turn_off"}
+                ] 
+            },
+            {   "mdns": "Master Bedroom TV._androidtvremote2._tcp.local.", 
+                "name": "Master Bedroom TV"
+            }
+        ],
+        "buttons": [
+            { "name": "YouTube", "command": "am start -a android.intent.action.VIEW -n com.google.android.youtube.tv/com.google.android.apps.youtube.tv.activity.ShellActivity"}, 
+            { "name": "Vodafone", "command": "am start -a android.intent.action.VIEW -n com.vodafone.vtv.atv.pt/com.witsoftware.vodafonetv.view.splash.SplashActivity"}
+        ] 
+    },
 
     "MiioYeelightHardware": {
         "devices": [

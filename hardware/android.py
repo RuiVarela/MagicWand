@@ -1,6 +1,8 @@
+import asyncio
 import os
 import pathlib
 import datetime
+from telnetlib import AYT
 
 from adb_shell.auth.keygen import keygen
 from androidtv.adb_manager.adb_manager_async import ADBPythonAsync
@@ -15,7 +17,7 @@ class AndroidHardware(Hardware):
         self.signer = None
         self.adbkey = None
 
-        self.refresh_interval = 0.0
+        self.refresh_interval = 30.0
 
     async def start(self, configuration):
         #
@@ -38,18 +40,35 @@ class AndroidHardware(Hardware):
         id_counter = 0
         for tv in configuration["tvs"]:
             mdns = tv['mdns']
-            self.tvs[mdns] = {
-                "mdns": mdns,
+
+            id_counter = id_counter + 1
+            device = {
+                'id': self.hardware_type() + "_" + str(id_counter),
+                'name': tv['name'],
+                'type': 'switch',
+                'state': 'off',
+                
                 "driver": None,
                 "status": None,
-                "last_status": None
-            } 
+                "last_status": None,
 
-            for current in tv["devices"]:
+                "mdns": mdns
+            }
+            self.tvs[mdns] = device
+            devices.append(device)
+
+            buttons = []
+            if "buttons" in tv:
+                buttons.extend(tv["buttons"])
+
+            if "buttons" in configuration:
+                buttons.extend(configuration["buttons"])
+
+            for current in buttons:
                 id_counter = id_counter + 1
                 device = {
                     'id': self.hardware_type() + "_" + str(id_counter),
-                    'name': current['name'],
+                    'name': tv['name'] + " " + current['name'],
                     'type': 'button',
                     'state': 'off',
 
@@ -57,15 +76,19 @@ class AndroidHardware(Hardware):
                     "command": current["command"],
                 }
                 devices.append(device)
+
         self.devices = devices
         await super().start(configuration)
+
 
     async def run_action(self, device_id, action):
         device = self.get_device(device_id)
         tv = self.tvs[device["mdns"]]
-        action = device["command"]
-        driver = tv['driver']
 
+        if "command" in device:
+            action = device["command"]
+
+        driver = tv['driver']
         self.core.log(f"Android [{device['name']}] start {action}")
 
         if driver == None:
@@ -73,17 +96,21 @@ class AndroidHardware(Hardware):
             return False
 
         ok = False
-        if await driver.adb_connect():
-            #driver = AndroidTVAsync(mdns['ip'], adbkey=self.adbkey, signer=self.signer)
-            result = await driver.adb_shell("hdmi")
 
-            #result = await driver.turn_off()
-            self.core.log(f"Result {result}")  
+        try:
+            if await driver.adb_connect():
+                if action == "turn_off" or action == "disable":
+                    result = await driver.turn_off()
+                elif action == "turn_on" or action == "enable":
+                    result = await driver.turn_on()
+                else:
+                    result = await driver.adb_shell(action)
+                #self.core.log(f"Result {result}")  
+                await driver.adb_close()
+                ok = True
+        except Exception as exception:
+            self.core.log_exception(f"Failed", exception)
 
-            await driver.adb_close()
-            ok = True
-
-    
         self.core.log(f"Android [{device['name']}] end")  
         return ok    
 
@@ -107,18 +134,15 @@ class AndroidHardware(Hardware):
             
             if tv['driver'] and self.refresh_interval > 0.0 and self.elapsed(tv['last_status'], self.refresh_interval):
                 driver = tv['driver']
-
-                if await driver.adb_connect():
-                    #properties = await driver.get_device_properties()
-                    #self.core.log(f"properties {properties}")
-
-                    #apps = await driver.get_installed_apps()
-                    #self.core.log(f"updated {apps}")
-
-                    state = await tv['driver'].get_properties_dict()
-                    tv['state'] = state
-                    self.core.log(f"state = {state}")
-
-                    await driver.adb_close()
-
+                try:
+                    if await driver.adb_connect():
+                        status = await tv['driver'].get_properties_dict()
+                        tv['status'] = status
+                        tv['state'] = 'on' if status['screen_on'] else 'off'
+                        #self.core.log(f"state = {state}")
+                        await driver.adb_close()
+                except Exception as exception:
+                    self.core.log(f"Failed to update {tv['name']}")
+                    #self.core.log_exception(f"Failed", exception)
+                    
                 tv['last_status'] = datetime.datetime.now()

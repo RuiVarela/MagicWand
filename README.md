@@ -11,6 +11,7 @@ Supported Hardware
 - Tuya devices using cloud api
 - Tuya devices using local lan
 - Yeelight (like xiaomi bedside lamp 2)
+- Android Tvs via adb
 - Shell scripts
 
 # Runtime Setup
@@ -44,6 +45,7 @@ Hardware:
 - `TuyaCloudHardware` A tuya driver that uses tuya cloud api. Setting up tuya cloud is a pretty messed up process, [this is the sdk reference](https://github.com/tuya/tuya-iot-python-sdk) but basically you need to create a project and link your mobile app to you project. In my case I use the "Smart Life" app. You don't need to create assets and users for assets.
 - `TuyaLocalHardware` A tuya driver that uses only your local lan. You'll need to know each device `id` and lan `token`. The driver was based on [tinytuya](https://github.com/jasonacox/tinytuya).
 - `MiioYeelightHardware` Yeelight driver using [python-miio](https://github.com/rytilahti/python-miio) library. This uses only the lan for comunications, you'll need the device lan `token`. this has only been tested on the `xiaomi Bedside lamp 2`
+- `AndroidHardware` Android adb driver using [androidtv](https://github.com/JeffLIrion/python-androidtv) library. 
 - `MultiDeviceHardware` Virtual Hardware that joins devices of the same kind on a single device. With this you can i.e. group `Living Room Ceiling Light`, and `Living Room Tv Light` on a virtual device `Living Room Light`. and `Living Room Light` turns on or off both his children. 
 - `ButtonHardware` Virtual Button that runs a list of device actions when pressed.
 
