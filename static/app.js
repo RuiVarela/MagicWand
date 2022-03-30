@@ -31,6 +31,12 @@ function deviceClicked(device, action) {
 }
 
 
+function showMorePopup(subdevices) {
+    elById("more-actions-list").classList.toggle("hide");
+    elById("more-actions-list").classList.toggle("show");
+}
+
+
 function updateDeviceUi(div, device) {
     div.device = device;
 
@@ -62,6 +68,16 @@ function updateDeviceUi(div, device) {
         html += '<span class="device_group ' + toggler + '">' + group + ' </span>'
     }
     html += name + "</div>"
+
+
+
+    if (device.sub_devices && device.sub_devices.length > 0) {
+        html += '<div class="more-container">'
+        html += '<button class="more-button dropbtn"></button>'
+        html += '</div>'
+    }
+
+
     div.innerHTML = html;
 
     let remove = [];
@@ -93,6 +109,16 @@ function updateDeviceUi(div, device) {
 
         div.store_click_handler = () => { deviceClicked(device.id, null); };
         div.addEventListener("click", div.store_click_handler);
+
+        let selected = div.querySelector(`[class="more-button dropbtn"]`);
+        if (selected) {
+            selected.addEventListener("mouseover", (e) => { e.stopPropagation(); });
+            selected.addEventListener("onmousedown", (e) => { e.stopPropagation(); });
+            selected.addEventListener("click", (e) => { 
+                e.stopPropagation();
+                showMorePopup(device.sub_devices);
+            });
+        }
     }
 }
 
@@ -228,6 +254,7 @@ window.onclick = function (event) {
 
 elById("groups-list").classList.add("hide");
 elById("settings-list").classList.add("hide");
+elById("more-actions-list").classList.add("hide");
 
 elById("groups-button").addEventListener("click", () => { 
     elById("groups-list").classList.toggle("hide");

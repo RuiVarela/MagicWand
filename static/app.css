@@ -244,3 +244,30 @@ fieldset { border-width:0; padding:0; margin:0; }
 .curtain_open:active, .curtain_stop:active, .curtain_close:active {
     background-color: var(--red-1);
 }
+
+
+/* more actions icon */
+.more-container {
+    position: relative;
+    left: calc(100% - 0.5rem - 2.5em);
+    top: calc(100% - 0.5rem - 2.5em);
+
+    width: 2.5em;
+    height: 2.5em;
+}
+.more-button {
+    width: 100%;
+    height: 100%;
+    
+    background-image: url("/icons/more_horiz_black_24dp.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+#more-actions-list {
+    z-index: 3;
+
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}

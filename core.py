@@ -198,7 +198,8 @@ class Core:
 
 
     def _devices_sort_func(self, element):
-        return element['group'] + " " + element['type'] + " " + element['name']
+        #return element['group'] + " " + element['type'] + " " + element['name']
+        return element['group'] + " " + element['name']
 
     async def get_device_list(self):
         devices = self.get_devices()
@@ -226,9 +227,24 @@ class Core:
                 'name': name,
                 'group': group,
                 'state': current['state'],
-                'dashboard': on_dashboard
+                'dashboard': on_dashboard,
+                'sub_devices': []
             }
             records.append(element)
 
         records.sort(key=self._devices_sort_func)   
+
+
+        # collapse subdevices
+        subdevices = [c for c in records if " >" in c['name']]
+        records = [c for c in records if " >" not in c['name']]
+
+        for subdevice in subdevices:
+            parent, child = subdevice['name'].split(" >")
+            for record in records:
+                if record['name'].startswith(parent):
+                    subdevice['name'] = child
+                    record['sub_devices'].append(subdevice)
+                    break
+
         return (groups, records)
