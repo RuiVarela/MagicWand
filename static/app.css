@@ -265,6 +265,7 @@ fieldset { border-width:0; padding:0; margin:0; }
 }
 
 #more-actions-list {
+    position: fixed;
     z-index: 3;
 
     left: 50%;
