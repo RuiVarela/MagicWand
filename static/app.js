@@ -31,9 +31,43 @@ function deviceClicked(device, action) {
 }
 
 
-function showMorePopup(subdevices) {
-    elById("more-actions-list").classList.toggle("hide");
-    elById("more-actions-list").classList.toggle("show");
+function showMorePopup(event, subdevices) {
+    let list = elById("more-actions-list");
+    closePopUps(list);
+
+    list.classList.toggle("hide");
+    list.classList.toggle("show");
+
+    if (list.classList.contains("hide")) {
+        return;
+    }
+
+    while (list.firstChild)
+        list.removeChild(list.firstChild);
+    
+    subdevices.forEach(current => {
+
+        let element = document.createElement("a");
+        element.setAttribute("href", "#");
+        element.innerHTML = current.name
+        element.addEventListener("click", () => { 
+            let action = "enable";
+            let device = current.id;
+            console.log("Popup Clicked: " + device + " > " + action);
+            fetch('/api/device/' + device + '/' + action);
+        });
+
+        list.appendChild(element);
+    });
+
+
+    if (event) {
+        var x = event.clientX;
+        var y = event.clientY;
+        //console.log(`Click [${x} ${y}]`)
+        list.style.left = `${x}px`;
+        list.style.top = `${y}px`;
+    }
 }
 
 
@@ -116,7 +150,7 @@ function updateDeviceUi(div, device) {
             selected.addEventListener("onmousedown", (e) => { e.stopPropagation(); });
             selected.addEventListener("click", (e) => { 
                 e.stopPropagation();
-                showMorePopup(device.sub_devices);
+                showMorePopup(e, device.sub_devices);
             });
         }
     }
@@ -236,19 +270,26 @@ window.onpopstate = function(event) {
 
 };
 
+function closePopUps(ignore) {
+    let dropdowns = elByCls("dropdown-content");
+    for (let i = 0; i < dropdowns.length; i++) {
+        var openDropdown = dropdowns[i];
+
+        if (ignore && ignore === openDropdown) {
+            continue;
+        }
+
+        if (openDropdown.classList.contains('show')) {
+            openDropdown.classList.remove('show');
+            openDropdown.classList.add('hide');
+        }
+    }
+}
+
 // Close the dropdown menu if the user clicks outside of it
 window.onclick = function (event) {
     if (!event.target.matches('.dropbtn') && !event.target.matches('.dropdown')) {
-        let dropdowns = elByCls("dropdown-content");
-        for (let i = 0; i < dropdowns.length; i++) {
-            var openDropdown = dropdowns[i];
-
-            if (openDropdown.classList.contains('show')) {
-                openDropdown.classList.remove('show');
-                openDropdown.classList.add('hide');
-            }
-
-        }
+        closePopUps();
     }
 }
 
@@ -257,13 +298,19 @@ elById("settings-list").classList.add("hide");
 elById("more-actions-list").classList.add("hide");
 
 elById("groups-button").addEventListener("click", () => { 
-    elById("groups-list").classList.toggle("hide");
-    elById("groups-list").classList.toggle("show");
+    let target = elById("groups-list");
+    closePopUps(target);
+
+    target.classList.toggle("hide");
+    target.classList.toggle("show");
 });
 
 elById("settings-button").addEventListener("click", () => { 
-    elById("settings-list").classList.toggle("hide");
-    elById("settings-list").classList.toggle("show");
+    let target = elById("settings-list");
+    closePopUps(target);
+
+    target.classList.toggle("hide");
+    target.classList.toggle("show");
 });
 
 
