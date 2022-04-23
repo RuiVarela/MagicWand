@@ -23,7 +23,7 @@ class Core:
         self.dashboard_devices = []
         self.hardware = []
         self.http_server = None
-        self.log_history_size = 100 * 1024
+        self.log_history_size = 250
         self.log_history = []
 
 

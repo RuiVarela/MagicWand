@@ -94,6 +94,7 @@ class TuyaLocalHardware(Hardware):
         else:
             action = (action == 'enable') or (action == 'open')
         
+        self.core.log(f"Tuya [{device['name']}] set_status({action},{dp})")  
         result = await hardware.set_status(action, dp)     
 
         self.core.log(f"Tuya [{device['name']}] end")  
@@ -106,7 +107,6 @@ class TuyaLocalHardware(Hardware):
         return False    
 
     def apply_status(self, hardware_id, status):
-
         # self.core.log(f"Status {device['name']} : {status}");
         for device in self.get_devices():
             if device['cfg']['id'] != hardware_id:
@@ -116,6 +116,7 @@ class TuyaLocalHardware(Hardware):
 
             if status is None or 'error' in status:
                 self.core.log(f"Failed to call status [{device['name']}] : {status}")
+                continue
 
             dp = str(device["dp"])
             ok = False
