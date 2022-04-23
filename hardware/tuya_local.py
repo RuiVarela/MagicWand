@@ -106,12 +106,16 @@ class TuyaLocalHardware(Hardware):
         return False    
 
     def apply_status(self, hardware_id, status):
+
         # self.core.log(f"Status {device['name']} : {status}");
         for device in self.get_devices():
             if device['cfg']['id'] != hardware_id:
                 continue
             
             device['last_status'] = datetime.datetime.now()
+
+            if status is None or 'error' in status:
+                self.core.log(f"Failed to call status [{device['name']}] : {status}")
 
             dp = str(device["dp"])
             ok = False
@@ -164,10 +168,8 @@ class TuyaLocalHardware(Hardware):
                 if hardware.address != "" and device['type'] != "curtain":
                     #self.core.log(f"{index} Refreshing device [{device['name']}] status")
                     result = await hardware.status()
-                    if 'error' in result:
-                        self.core.log(f"Failed to call status [{device['name']}] : {result}")
-                    else:
-                        self.apply_status(device['cfg']['id'], result)
+                    self.apply_status(device['cfg']['id'], result)
+                        
 
         if self.status_iterator > 1000:
             self.status_iterator = 0
