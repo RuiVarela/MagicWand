@@ -15,7 +15,7 @@ class Core:
         self.configuration = None
         self.restart = False
         self.running = True
-        self.version = "1.1.0"
+        self.version = "1.2.0"
 
         self.groups = []
         self.name_mapper = {}
