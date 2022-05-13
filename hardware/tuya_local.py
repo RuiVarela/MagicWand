@@ -94,11 +94,20 @@ class TuyaLocalHardware(Hardware):
         else:
             action = (action == 'enable') or (action == 'open')
         
-        self.core.log(f"Tuya [{device['name']}] set_status({action},{dp})")  
-        result = await hardware.set_status(action, dp)     
+        attempts = 5
+        while attempts > 0:
+            self.core.log(f"Tuya [{device['name']}] set_status({action},{dp}) | attempt {attempts}")  
+            result = await hardware.set_status(action, dp)     
+            self.core.log(f"Tuya [{device['name']}] end") 
 
-        self.core.log(f"Tuya [{device['name']}] end")  
-
+            if (result is not None and 
+                'error' in result and 
+                result['error'] == 'device already in use'):
+                attempts = attempts - 1 
+                await asyncio.sleep(1.5)
+            else:
+                attempts = 0
+            
         if result is not None and 'error' not in result:
             return True
 
