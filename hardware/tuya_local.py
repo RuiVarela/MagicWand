@@ -146,13 +146,6 @@ class TuyaLocalHardware(Hardware):
         if device_count <= 0:
             return 
 
-        # reset devices
-        for device in devices:
-            if device['hardware'].seqno > 2500:
-                device['hardware'] = Device(device['cfg']['id'], "", device['cfg']['token'])
-                self.core.log(f"Recreated hardware for [{device['name']}]")
-
-
         # find out the devices ip
         for key in self.discover.devices:
             for device in devices:
@@ -176,6 +169,7 @@ class TuyaLocalHardware(Hardware):
                 if hardware.address != "" and device['type'] != "curtain":
                     #self.core.log(f"{index} Refreshing device [{device['name']}] status. seqno {hardware.seqno}")
                     result = await hardware.status()
+                    #self.core.log(f"{index} Done Refreshing device [{device['name']}] status. seqno {hardware.seqno}")
                     self.apply_status(device['cfg']['id'], result)
                         
 

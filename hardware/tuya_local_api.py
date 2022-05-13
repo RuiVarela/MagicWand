@@ -4,10 +4,12 @@
 #
 import asyncio
 import base64
+from pickle import NONE
 import struct
 import json
 import binascii
 import time
+import traceback
 
 from hashlib import md5
 from Crypto.Cipher import AES 
@@ -145,10 +147,12 @@ class NetworkCommand(asyncio.Protocol):
         self.transport = None
 
     def connection_made(self, transport):
+        #self.logger("Connected")
         self.transport = transport
         transport.write(self.payload)
 
     def data_received(self, data):
+        #self.logger(f"Received: {data}")
         self.received += data
 
         header_len = struct.calcsize(MESSAGE_RECV_HEADER_FMT)
@@ -184,6 +188,7 @@ class NetworkCommand(asyncio.Protocol):
             pass
 
         self.on_con_lost.set_result(True)
+        #self.logger("Done")
 
 
 class Device:
@@ -192,16 +197,22 @@ class Device:
         self.id = dev_id
         self.address = address
         self.local_key = local_key.encode("latin1")
-        self.connection_timeout = 4
-        self.connection_attempts = 3
+        self.connection_timeout = 2
+        self.connection_attempts = 5
         self.version = 3.3
         self.dev_type = "type_0a"
         self.port = 6668  # default - do not expect caller to pass in
         self.cipher = AESCipher(self.local_key)
         self.seqno = 0
         self.dps_to_request = {}
+        self.communicating = False
 
     async def _send_receive(self, payload):
+        if self.communicating:
+            return error_json("device already in use")
+        
+        self.communicating = True
+
         loop = asyncio.get_running_loop()
         received_payload = None
         transport = None
@@ -218,8 +229,13 @@ class Device:
                 received_payload = protocol.received_payload.payload
                 break
                 
-            except Exception as e:
+            except Exception as exception:
                 attempts = attempts - 1
+           
+                #data = "_send_receive ".join(traceback.format_exception(type(exception), exception, exception.__traceback__))
+                #self.logger(data)
+                if attempts > 0:
+                    await asyncio.sleep(1)
             finally:
 
                 try:
@@ -241,6 +257,14 @@ class Device:
             except Exception as e:
                 self.logger("error unpacking or decoding tuya JSON payload")
                 result = error_json("invalid payload")
+
+
+        # reset devices
+        if self.seqno > 250:
+            self.seqno = 0
+            self.logger(f"reseted sequnce number for device {self.address}")
+
+        self.communicating = False
 
         return result
 
@@ -373,6 +397,7 @@ class TuyaDiscovery(asyncio.DatagramProtocol):
             transport.close()
 
     def datagram_received(self, data, addr):
+
         data = data[20:-8]
         try:
             data = self._cipher.decrypt(data, False)
@@ -380,6 +405,9 @@ class TuyaDiscovery(asyncio.DatagramProtocol):
             data = data.decode()
 
         device = json.loads(data)
+
+        #defaultLogger(f"datagram_received payload: {device}")
+
         self.devices[device.get("gwId")] = device
 
         
