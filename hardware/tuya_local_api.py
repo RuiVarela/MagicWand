@@ -197,8 +197,8 @@ class Device:
         self.id = dev_id
         self.address = address
         self.local_key = local_key.encode("latin1")
-        self.connection_timeout = 2
-        self.connection_attempts = 5
+        self.connection_timeout = 8
+        self.connection_attempts = 3
         self.version = 3.3
         self.dev_type = "type_0a"
         self.port = 6668  # default - do not expect caller to pass in
@@ -260,9 +260,9 @@ class Device:
 
 
         # reset devices
-        if self.seqno > 250:
+        if self.seqno > 10:
             self.seqno = 0
-            self.logger(f"reseted sequnce number for device {self.address}")
+            #self.logger(f"reseted sequence number for device {self.address}")
 
         self.communicating = False
 

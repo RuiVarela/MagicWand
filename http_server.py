@@ -27,7 +27,9 @@ class HttpServer:
         return web.Response(text=self.to_json(response_obj))
 
     async def handle_maintenance_log(self, request):
-        data = "\n".join(self.core.log_history)
+        lines = self.core.log_history.copy()
+        lines.reverse();
+        data = "\n".join(lines)
         return web.Response(text=data)        
 
     async def handle_maintenance_clear_log(self, request):

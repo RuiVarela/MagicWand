@@ -58,6 +58,7 @@ class TuyaLocalHardware(Hardware):
                     'state': 'off',
 
                     'last_status': None,
+                    'errors': 0,
                     'hardware': hardware, 
                     'dp': dp,
                     'cfg': current
@@ -104,7 +105,7 @@ class TuyaLocalHardware(Hardware):
                 'error' in result and 
                 result['error'] == 'device already in use'):
                 attempts = attempts - 1 
-                await asyncio.sleep(1.5)
+                await asyncio.sleep(3.5)
             else:
                 attempts = 0
             
@@ -124,6 +125,7 @@ class TuyaLocalHardware(Hardware):
             device['last_status'] = datetime.datetime.now()
 
             if status is None or 'error' in status:
+                device['errors'] = device['errors'] + 1;
                 self.core.log(f"Failed to call status [{device['name']}] : {status}")
                 continue
 
@@ -173,8 +175,18 @@ class TuyaLocalHardware(Hardware):
             device = devices[index]
             self.status_iterator = self.status_iterator + 1
 
+            if device['errors'] > 20:
+                backofftime = 3
+                self.core.log(f"Too many errors for [{device['name']}] status. backing off, for {backofftime} minutes")
+                device['hardware'] = Device(device['cfg']['id'], "", device['cfg']['token'])
+                device['hardware'].logger = self.core.log
+                device['errors'] = 0
+                device['last_status'] = datetime.datetime.now() + datetime.timedelta(minutes=backofftime)
+                continue
+
             if self.elapsed(device['last_status'], self.refresh_interval):
                 hardware = device['hardware']
+
                 if hardware.address != "" and device['type'] != "curtain":
                     #self.core.log(f"{index} Refreshing device [{device['name']}] status. seqno {hardware.seqno}")
                     result = await hardware.status()
