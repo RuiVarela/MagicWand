@@ -108,6 +108,10 @@ class AndroidHardware(Hardware):
                 #self.core.log(f"Result {result}")  
                 await driver.adb_close()
                 ok = True
+            else:
+                self.core.log(f"Android [{device['name']}] unable to establish a connection") 
+                tv['driver'] = None
+
         except Exception as exception:
             self.core.log_exception(f"Failed", exception)
 
@@ -127,7 +131,6 @@ class AndroidHardware(Hardware):
 
                 if tv['driver'] == None:
                     driver = AndroidTVAsync(mdns['ip'], adbkey=self.adbkey, signer=self.signer)
-                    driver.start_intent
                     tv['driver'] = driver
                     self.core.log(f"Creating android device {key}")
 
@@ -141,6 +144,9 @@ class AndroidHardware(Hardware):
                         tv['state'] = 'on' if status['screen_on'] else 'off'
                         #self.core.log(f"state = {state}")
                         await driver.adb_close()
+                    else:
+                        self.core.log(f"Android [{tv['name']}] unable to establish a connection") 
+                        tv['driver'] = None
                 except Exception as exception:
                     self.core.log(f"Failed to update {tv['name']}")
                     #self.core.log_exception(f"Failed", exception)

@@ -119,7 +119,7 @@ class MiioYeelightHardware(Hardware):
                     self.core.log("Yeelight [" +  current['name'] + "] value: " + current['state'])
 
             except Exception as exception:
-                self.core.log_exception('failed to create yeelight', exception)
+                self.core.log(f"Unable to communicate with device {current['name']}")
                 return False
 
         
