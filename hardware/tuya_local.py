@@ -99,8 +99,7 @@ class TuyaLocalHardware(Hardware):
         while attempts > 0:
             self.core.log(f"Tuya [{device['name']}] set_status({action},{dp}) | attempt {attempts}")  
             result = await hardware.set_status(action, dp)     
-            self.core.log(f"Tuya [{device['name']}] end") 
-
+            
             if (result is not None and 
                 'error' in result and 
                 result['error'] == 'device already in use'):
@@ -110,6 +109,7 @@ class TuyaLocalHardware(Hardware):
                 attempts = 0
             
         if result is not None and 'error' not in result:
+            self.core.log(f"Tuya [{device['name']}] end") 
             return True
 
         self.core.log(f"Action Error [{device['name']}] {result}")
@@ -187,7 +187,7 @@ class TuyaLocalHardware(Hardware):
             if self.elapsed(device['last_status'], self.refresh_interval):
                 hardware = device['hardware']
 
-                if hardware.address != "" and device['type'] != "curtain":
+                if hardware.address != "":
                     #self.core.log(f"{index} Refreshing device [{device['name']}] status. seqno {hardware.seqno}")
                     result = await hardware.status()
                     #self.core.log(f"{index} Done Refreshing device [{device['name']}] status. seqno {hardware.seqno}")
