@@ -98,6 +98,8 @@ class Core:
         if "DashboardDevices" in self.configuration:
             self.dashboard_devices = self.configuration["DashboardDevices"]
         
+        use_zeroconf = False
+
         #
         # Add hardware
         #
@@ -124,6 +126,7 @@ class Core:
 
         if "AndroidHardware" in self.configuration:
             self.hardware.append(hardware.AndroidHardware(self))
+            use_zeroconf = True
 
         all_tasks = []
 
@@ -149,13 +152,16 @@ class Core:
         #
         # Zero Conf
         #
-        zeroconf = Zeroconf(loop)
-        zeroconf_listener = ZListener(self)
-        zeroconf_browsers = [
-            ZBrowser(zeroconf, "_adb._tcp.local.", zeroconf_listener),
-            #ZBrowser(zeroconf, "_googlecast._tcp.local.", zeroconf_listener),
-            ZBrowser(zeroconf, "_androidtvremote2._tcp.local.", zeroconf_listener),
-        ]
+        if use_zeroconf:
+            self.log("enabling zeroconf")
+            
+            zeroconf = Zeroconf(loop)
+            zeroconf_listener = ZListener(self)
+            zeroconf_browsers = [
+                ZBrowser(zeroconf, "_adb._tcp.local.", zeroconf_listener),
+                #ZBrowser(zeroconf, "_googlecast._tcp.local.", zeroconf_listener),
+                ZBrowser(zeroconf, "_androidtvremote2._tcp.local.", zeroconf_listener),
+            ]
 
         while self.running:
             await asyncio.sleep(1)
@@ -164,9 +170,10 @@ class Core:
 
         self.log("Core Shutting down")
 
-        for current in zeroconf_browsers:
-            current.cancel()
-        await zeroconf.close()
+        if use_zeroconf:
+            for current in zeroconf_browsers:
+                current.cancel()
+            await zeroconf.close()
 
         await asyncio.gather(*all_tasks)
         self.log("Core shutdown completed")
